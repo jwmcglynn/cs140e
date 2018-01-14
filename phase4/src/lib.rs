@@ -14,7 +14,7 @@ const GPIO_CLR0: *mut u32 = (GPIO_BASE + 0x28) as *mut u32;
 
 #[inline(never)]
 fn spin_sleep_ms(ms: usize) {
-    for _ in 0..(ms * 600) {
+    for _ in 0..(ms * 6000) {
         unsafe { asm!("nop" :::: "volatile"); }
     }
 }
