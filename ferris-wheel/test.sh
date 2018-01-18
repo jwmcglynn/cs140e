@@ -50,7 +50,7 @@ fi
 function compile_test() {
   local file="${1}"
   local should_compile=$2
-  local should_run_pass=$2
+  local should_run_pass=$3
   local file_dir="${file%/*}"
   local filename="${file_dir##*/}/${file##*/}"
 
@@ -105,15 +105,15 @@ function compile_test() {
 let PASSES=0
 let FAILUREs=0
 
-for file in ${SCRIPT_DIR}/compile-pass/*.rs; do
+for file in "${SCRIPT_DIR}/compile-pass/"*.rs; do
   compile_test "${file}" true false
 done
 
-for file in ${SCRIPT_DIR}/compile-fail/*.rs; do
+for file in "${SCRIPT_DIR}/compile-fail/"*.rs; do
   compile_test "${file}" false false
 done
 
-for file in ${SCRIPT_DIR}/run-pass/*.rs; do
+for file in "${SCRIPT_DIR}/run-pass/"*.rs; do
   compile_test "${file}" true true
 done
 
