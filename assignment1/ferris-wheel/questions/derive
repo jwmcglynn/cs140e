@@ -1,0 +1,3 @@
+{:?} is a debug feature, and requires the type to derive Debug.
+
+"let y = x;" moves the value out of x, so the only way for "let z = x;" to succeed is if the type was copyable, so derive from Copy/Clone as well.

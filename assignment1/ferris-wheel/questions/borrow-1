@@ -1,0 +1,1 @@
+Borrow-1 makes a immutable reference to MyType, and then dereferences it which isn't possible because y doesn't own the reference. A fix is to make MyType copyable so that "let z = *y;" can copy the value without requiring mutability of y.

@@ -1,0 +1,1 @@
+Callers can only go into one scope level without the scope being public, so main can access "a", but not f.  To fix, mark "f" as pub so that main can see it.

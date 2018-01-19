@@ -1,0 +1,8 @@
+Implement methods in the builder type so that the unit tests pass:
+
+- default(), which returns an empty builder instance.
+- string, which writes the string field and returns self so that it can be used for chaining.
+- number, which writes the number field and returns self (similar to string).
+- to_string, which returns each value converted to a string, with a space in between them if both exist.
+
+string() was slightly tricky, to accept both a &str and String, it needs to accept an Into<String> which can convert to String from both.

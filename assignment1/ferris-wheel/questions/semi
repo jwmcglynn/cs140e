@@ -1,0 +1,1 @@
+Rust has a fancy feature where omitting a semicolon automatically returns the value.  We only have one character to fix, so to return the value simply remove it.

@@ -1,0 +1,1 @@
+"let y = x;" uses the value of x, which "let z = x;" depends on existing when it calls.  Making the type non-copyable eliminates this.

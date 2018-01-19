@@ -1,0 +1,3 @@
+RefWrapper needs to define a lifetime. Since this can only hold a ref, we can't copy to extend the lifetime, so the lifetime of the ref must be greater than that of RefWrapper.
+
+Accept a lifetime template parameter, 'a, and define T to have that lifetime, and make inner(&self) return a T with that same lifetime (propagating it through).

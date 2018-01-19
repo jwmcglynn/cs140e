@@ -5,6 +5,32 @@ struct Builder {
     number: Option<usize>,
 }
 
+impl Builder {
+    fn default() -> Builder {
+        Builder { string: None, number: None }
+    }
+
+    fn string<S: Into<String>>(&mut self, value: S) -> &mut Builder {
+        self.string = Some(value.into());
+        self
+    }
+
+    fn number(&mut self, value: usize) -> &mut Builder {
+        self.number = Some(value);
+        self
+    }
+
+    fn to_string(&self) -> String {
+        // This could also be written as two if let/match statements, but this is less lines :-)
+        match (&self.string, self.number) {
+            (&Some(ref string), Some(number)) => string.clone() + " " + &number.to_string(),
+            (&Some(ref string), None) => string.clone(),
+            (&None, Some(number)) => number.to_string(),
+            (&None, None) => "".to_string(),
+        }
+    }
+}
+
 // Do not modify this function.
 fn main() {
     let empty = Builder::default().to_string();

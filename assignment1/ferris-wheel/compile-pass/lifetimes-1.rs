@@ -3,7 +3,7 @@
 struct StrWrapper<'a>(&'a str);
 
 impl<'a> StrWrapper<'a> {
-    fn inner(&self) -> &str {
+    fn inner(&self) -> &'a str {
         self.0
     }
 }

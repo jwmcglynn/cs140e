@@ -1,0 +1,1 @@
+MyTrait needs to be brought into scope with "use a::MyTrait;" to be callable in main.

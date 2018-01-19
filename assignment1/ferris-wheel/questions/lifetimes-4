@@ -1,0 +1,3 @@
+The RefWrapper and RefWrapperWrapper structs need to be modified in the same way as lifetimes-3.rs.
+
+The difference is that the impl block need to accept the generic parameter list as well, both after impl and the RefWrapper on the same line.  The parameters need to include both lifetimes and T.

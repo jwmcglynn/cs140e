@@ -1,0 +1,1 @@
+StrWrapper has some lifetime traits, but doesn't specify the lifetime of the return value of inner(). Since this is a tuple, it is the same as the lifetime of container.

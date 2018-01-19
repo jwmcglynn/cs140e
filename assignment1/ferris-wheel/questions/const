@@ -1,0 +1,3 @@
+To fix, either const needs to be removed from the variable, or the fn needs to be const.
+
+"const fn" is consistent with what this is trying to do, but is not enabled by default in rust, so "#![feature(const_fn)]" needs to be brought in.

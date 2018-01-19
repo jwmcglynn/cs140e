@@ -1,0 +1,3 @@
+1) Lifetimes need to be declared before use, so add 'a, and 'a, 'b to RefWrapper and RefWrapperWrapper's generic list respectively.
+2) T must be bound to the 'a lifetime so that it lives at least as long as the wrappers.
+3) For RefWrapperWrapper, 'a must be defined as having a longer lifetime than 'b since the RefWrapper (lifetime 'a) must life longer than RefWrapperWrapper (lifetime 'b).  This is done with 'a: 'b in the generic list.

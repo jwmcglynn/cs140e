@@ -1,0 +1,2 @@
+1) make_1 modifies the struct, so it needs to accept &mut self.
+2) In main(), the struct needs to be mutable now that make_1() requires a mutable object.

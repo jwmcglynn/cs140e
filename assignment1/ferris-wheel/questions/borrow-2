@@ -1,0 +1,1 @@
+Scope the immutable borrow so that it ends before the mutable borrow starts, only one borrow is allowed at a time.

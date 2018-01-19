@@ -1,0 +1,5 @@
+To set GPIO pin 27 as an output pin and to set/clear it, three registers are required.  The first is one of the FSELx registers, and the others are one of the two SETy and CLEARy registers.
+
+FSEL contains 10 pins per register (three bits per pin), so the 27th register will be stored in GPIO_FSEL2.
+
+SET/CLEAR store 32 pins per register (one bit per pin), so GPIO pin 27 would be in GPIO_SET0 and GPIO_CLR0.

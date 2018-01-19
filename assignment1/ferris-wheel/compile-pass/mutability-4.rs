@@ -3,12 +3,12 @@
 struct MyStruct(usize);
 
 impl MyStruct {
-    fn make_1(&self) {
+    fn make_1(&mut self) {
         self.0 = 1;
     }
 }
 
 pub fn main() {
-    let x = MyStruct(10);
+    let mut x = MyStruct(10);
     x.make_1();
 }

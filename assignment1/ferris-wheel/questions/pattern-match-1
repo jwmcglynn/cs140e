@@ -1,0 +1,1 @@
+The default matcher required moving the value out of MyEnum, triggering a whole bunch of borrow checker failures (mutability, lifetime, etc). To fix, use "ref string" so that we only take a reference instead of moving.

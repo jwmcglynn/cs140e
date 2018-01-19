@@ -1,0 +1,5 @@
+Taking the hint from the filename, we need to use the try! macro... or better yet given the constraints, its new version, the "?" operator.
+
+Update do_a() and do_b() calls to append the "?" operator to make them return error if they fail.
+
+Next, implement the From trait for Error so that it can be created from an ErrorA or ErrorB.

@@ -1,0 +1,1 @@
+main() can't call a method in a module unless it's public.

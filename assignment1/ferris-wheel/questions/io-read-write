@@ -1,0 +1,3 @@
+1) impl needs to specify what generic types it is implementing for.
+    1a) The type needs to support io::Read to have the read() method.
+2) Result needs both a result type and error type (io::Error in this case).
