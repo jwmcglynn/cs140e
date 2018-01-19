@@ -103,7 +103,7 @@ function compile_test() {
 }
 
 let PASSES=0
-let FAILUREs=0
+let FAILURES=0
 
 for file in "${SCRIPT_DIR}/compile-pass/"*.rs; do
   compile_test "${file}" true false
