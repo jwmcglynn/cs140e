@@ -55,7 +55,7 @@ function compile_test() {
   local filename="${file_dir##*/}/${file##*/}"
 
   if [ -n "${FILTER}" ] && ! [[ "${filename}" == *"${FILTER}"* ]]; then
-    verbose -e "${KBLU}SKIPPING: ${KWHT}${filename}${NRM}"
+    verbose -e "${KBLU}SKIPPING: ${KWHT}${filename}${KNRM}"
     return 0
   fi
 
@@ -93,7 +93,7 @@ function compile_test() {
 
   if [ $result -eq 0 ]; then
     let PASSES+=1
-    echo -e "${KGRN}SUCCESS: ${KWHT}${filename}${NRM}"
+    echo -e "${KGRN}SUCCESS: ${KWHT}${filename}${KNRM}"
   else
     let FAILURES+=1
   fi
