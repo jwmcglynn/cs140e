@@ -29,6 +29,17 @@ fn len_and_capacity_ok() {
 }
 
 #[test]
+fn len_and_capacity_sized() {
+    let mut storage = [0u8; 1024];
+    let stack_vec_sized = StackVec::with_len(&mut storage, 200);
+
+    assert_eq!(stack_vec_sized.len(), 200);
+    assert_eq!(stack_vec_sized.capacity(), 1024);
+    assert!(!stack_vec_sized.is_empty());
+    assert!(!stack_vec_sized.is_full());
+}
+
+#[test]
 #[should_panic]
 fn index_oob() {
     let mut storage = [0u8; 1024];
@@ -44,6 +55,13 @@ fn index_oob_after_truncate() {
     stack_vec.push(10).expect("len > 0");
     stack_vec.truncate(0);
     let _ = stack_vec[0];
+}
+
+#[test]
+fn can_pop_sized() {
+    let mut storage = [0u8; 1024];
+    let mut stack_vec_sized = StackVec::with_len(&mut storage, 200);
+    assert_eq!(stack_vec_sized.pop(), Some(0));
 }
 
 #[test]
@@ -143,6 +161,20 @@ fn push_too_far() {
     stack_vec.push(1).expect("okay");
     stack_vec.push(2).expect("okay");
     stack_vec.push(3).expect("not okay");
+}
+
+#[test]
+fn pop_all() {
+    let mut storage = [0, 1, 2];
+    let mut stack_vec = StackVec::with_len(&mut storage, 3);
+    assert!(stack_vec.is_full());
+
+    assert_eq!(stack_vec.pop(), Some(2));
+    assert_eq!(stack_vec.pop(), Some(1));
+    assert_eq!(stack_vec.pop(), Some(0));
+    assert!(stack_vec.is_empty());
+
+    assert!(stack_vec.pop().is_none());
 }
 
 #[test]
