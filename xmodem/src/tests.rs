@@ -103,7 +103,7 @@ fn test_small_packet_eof_error() {
 #[test]
 fn test_eot() {
     let mut buffer = vec![NAK, 0, NAK, 0, ACK];
-    Xmodem::new(Cursor::new(&mut buffer))
+    Xmodem::new(Cursor::new(buffer.as_mut_slice()))
         .write_packet(&[])
         .expect("write empty buf for EOT");
 
@@ -121,13 +121,13 @@ fn test_expect_byte() {
 #[test]
 fn test_expect_byte_or_cancel() {
     let mut buffer = vec![2, 0];
-    let b = Xmodem::new(Cursor::new(&mut buffer))
+    let b = Xmodem::new(Cursor::new(buffer.as_mut_slice()))
         .expect_byte_or_cancel(2, "it's a 2")
         .expect("got a 2");
 
     assert_eq!(b, 2);
 
-    let e = Xmodem::new(Cursor::new(&mut buffer))
+    let e = Xmodem::new(Cursor::new(buffer.as_mut_slice()))
         .expect_byte_or_cancel(0xFF, "not 0xFF")
         .expect_err("unexpected");
 
