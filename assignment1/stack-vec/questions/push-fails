@@ -1,0 +1,1 @@
+push returns a Result because unlike Vec, StackVec has a limited size.  If the StackVec is full, it can no longer accept any new items and returns an Err.  If a Vec is full, it simply allocates more storage.

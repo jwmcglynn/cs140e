@@ -1,0 +1,1 @@
+Any tests that call iter() or index into the array would fail if Deref was not implemented.  StackVec doesn't implement these operations directly, and instead relies on the underlying slice implementation of these functions.  Without DerefMut, using indexing to change values would not work, such as "stack_vec[0] = 1".
