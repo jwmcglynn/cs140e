@@ -42,7 +42,7 @@ impl Xmodem<()> {
                 match transmitter.write_packet(&packet) {
                     Err(ref e) if e.kind() == io::ErrorKind::Interrupted => continue,
                     Err(e) => return Err(e),
-                    Ok(n) => {
+                    Ok(_) => {
                         written += n;
                         continue 'next_packet;
                     }

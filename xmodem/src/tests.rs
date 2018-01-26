@@ -60,6 +60,16 @@ fn test_loop() {
 }
 
 #[test]
+fn test_transmit_reported_bytes() {
+    let (input, mut output) = ([0u8; 50], [0u8; 128]);
+    let (tx, rx) = pipe();
+    let tx_thread = std::thread::spawn(move || Xmodem::transmit(&input[..], rx));
+    let rx_thread = std::thread::spawn(move || Xmodem::receive(tx, &mut output[..]));
+    assert_eq!(tx_thread.join().expect("tx join okay").expect("tx okay"), 50);
+    assert_eq!(rx_thread.join().expect("rx join okay").expect("rx okay"), 128);
+}
+
+#[test]
 fn test_raw_transmission() {
     let mut input = [0u8; 128];
     let mut output = [0u8; 128];
