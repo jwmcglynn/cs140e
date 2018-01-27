@@ -1,0 +1,1 @@
+Traits have the benefit of being able to write more generic code that uses them.  Callers don't have to distinguish between write-only and read-write types if they simply need to write a value, and can share the implementation.  Traits also allow callers to wrap the type in a generic and selectively expose functionality based on the existence of traits.

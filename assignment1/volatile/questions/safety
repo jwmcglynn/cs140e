@@ -1,0 +1,1 @@
+Read and write are safe because they guard access to the raw pointer, and always use volatile operations to access them.  new is unsafe because it can't guarantee the lifetime or type of the pointer passed in, the caller must use it correctly.

@@ -1,0 +1,1 @@
+Volatile is a simple wrapper around a pointer, which may exist in multiple places.  UniqueVolatile ensures that there is only one instance, like a Unique pointer.

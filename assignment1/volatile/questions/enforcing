@@ -1,0 +1,1 @@
+Read-only and write-only is enforced by hiding the original pointer, and selectively exposing methods to manipulate it.  Read access returns the value of the pointer, write access gives access to set it but not to read the current value.

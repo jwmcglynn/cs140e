@@ -1,0 +1,1 @@
+The readable!, writeable! and readable_writeable! macros implement the traits for a given type, so that the implementation does not need to be repeated for each type that supports them.
