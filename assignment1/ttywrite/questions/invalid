@@ -1,0 +1,1 @@
+structopt operates on a struct, and the struct must contain all of the options that the argument list supports.  If an option is not present in the struct, structopt knows to reject that parameter.

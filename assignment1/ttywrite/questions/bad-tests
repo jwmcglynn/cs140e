@@ -1,0 +1,1 @@
+THE XMODEM protocol is interactive, and requires the receiver to send bytes back to initiate the transfer and confirm receipt of packets.  Without the receiver, tests can't send data so the data is sent in the raw instead.

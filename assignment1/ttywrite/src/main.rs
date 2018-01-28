@@ -49,10 +49,30 @@ struct Opt {
 
 fn main() {
     use std::fs::File;
-    use std::io::{self, BufReader, BufRead};
+    use std::io::{self, BufReader};
 
     let opt = Opt::from_args();
-    let mut serial = serial::open(&opt.tty_path).expect("path points to invalid TTY");
+    let mut serial = serial::open(&opt.tty_path).expect("Path points to invalid TTY");
 
-    // FIXME: Implement the `ttywrite` utility.
+    let mut settings = serial.read_settings().expect("Failed to load settings");
+    settings.set_baud_rate(opt.baud_rate).expect("Invalid baud rate");
+    settings.set_char_size(opt.char_width);
+    settings.set_flow_control(opt.flow_control);
+    settings.set_stop_bits(opt.stop_bits);
+    serial.write_settings(&settings).expect("Failed to apply serial settings");
+
+    serial.set_timeout(Duration::from_secs(opt.timeout)).expect("Invalid timeout");
+
+    let mut reader: Box<io::Read> = if let Some(path) = opt.input {
+        let file = File::open(path).expect("Failed to open file");
+        Box::new(BufReader::new(file))
+    } else {
+        Box::new(BufReader::new(io::stdin()))
+    };
+
+    if opt.raw {
+        io::copy(&mut reader, &mut serial).expect("Write failed");
+    } else {
+        Xmodem::transmit(reader, serial).expect("Write failed");
+    }
 }
