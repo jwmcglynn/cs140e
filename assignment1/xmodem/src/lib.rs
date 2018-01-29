@@ -171,12 +171,12 @@ impl<T: io::Read + io::Write> Xmodem<T> {
     /// byte was not `byte`, or if writing the `CAN` byte failed on byte
     /// mismatch.
     fn expect_byte_or_cancel(&mut self, byte: u8, expected: &'static str) -> io::Result<u8> {
-        let source_byte: u8 = self.read_byte()?;
-        if source_byte != byte {
-            self.write_byte(CAN)?;
-            Err(io::Error::new(io::ErrorKind::InvalidData, expected))
-        } else {
-            Ok(source_byte)
+        match self.expect_byte(byte, expected) {
+            Err(e) => {
+                self.write_byte(CAN)?;
+                Err(e)
+            },
+            x => x,
         }
     }
 
@@ -192,7 +192,7 @@ impl<T: io::Read + io::Write> Xmodem<T> {
     /// of `ConnectionAborted` is returned. Otherwise, the error kind is
     /// `InvalidData`.
     fn expect_byte(&mut self, byte: u8, expected: &'static str) -> io::Result<u8> {
-        let source_byte: u8 = self.read_byte()?;
+        let source_byte: u8 = self.read_byte(byte != CAN)?;
         if source_byte != byte {
             Err(io::Error::new(io::ErrorKind::InvalidData, expected))
         } else {
@@ -233,7 +233,7 @@ impl<T: io::Read + io::Write> Xmodem<T> {
             self.started = true;
         }
 
-        let header: u8 = self.read_byte()?;
+        let header: u8 = self.read_byte(true)?;
         match header {
             SOH => {
                 let expected_packet_number: u8 = self.packet;
@@ -244,7 +244,7 @@ impl<T: io::Read + io::Write> Xmodem<T> {
                 let checksum: u8 = buf.iter().fold(0, |acc, &x| {
                     acc.wrapping_add(x)
                 });
-                if checksum != self.read_byte()? {
+                if checksum != self.read_byte(false)? {
                     self.write_byte(NAK)?;
                     Err(io::Error::new(io::ErrorKind::Interrupted, "Checksum failed"))
                 } else {
