@@ -228,7 +228,15 @@ fn test_read_packet() {
     let source_packet = [0u8; 128];
 
     let rx_thread = std::thread::spawn(move || {
-        let mut xmodem = Xmodem::new(rx);
+        let mut xmodem = Xmodem::new_with_progress(rx, |progress| {
+            if let Progress::Packet(number) = progress {
+                assert_eq!(number, 1);
+            } else if let Progress::Started = progress {
+                // Valid.
+            } else {
+                assert!(false);
+            }
+        });
 
         let mut dest_packet = [0u8; 128];
         xmodem.read_packet(&mut dest_packet).expect("read packet");
@@ -372,7 +380,15 @@ fn test_write_packet() {
     use std::io::{Read, Write};
 
     let (tx, mut rx) = pipe();
-    let mut xmodem = Xmodem::new(tx);
+    let mut xmodem = Xmodem::new_with_progress(tx, |progress| {
+        if let Progress::Packet(number) = progress {
+            assert_eq!(number, 1);
+        } else if let Progress::Waiting = progress {
+            // Valid.
+        } else {
+            assert!(false);
+        }
+    });
 
     // NAK to start transmission, ACK to accept packet to unblock write_packet.
     rx.write(&[NAK, ACK]).expect("start");
