@@ -71,8 +71,19 @@ fn main() {
     };
 
     if opt.raw {
-        io::copy(&mut reader, &mut serial).expect("Write failed");
+        let bytes = io::copy(&mut reader, &mut serial).expect("Write failed");
+        println!("Wrote {} bytes.", bytes);
     } else {
-        Xmodem::transmit(reader, serial).expect("Write failed");
+        let bytes = Xmodem::transmit_with_progress(reader, serial, |progress| {
+            if let Progress::Packet(_) = progress {
+                print!(".");
+            } else if let Progress::Waiting = progress {
+                println!("Ready");
+            } else {
+                assert!(false);
+            }
+        }).expect("Write failed");
+        println!("");
+        println!("Wrote {} bytes.", bytes);
     }
 }
