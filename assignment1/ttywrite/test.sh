@@ -54,5 +54,5 @@ for i in {1..10}; do
   fi
 done
 
-echo -e "${KGRN}SUCCESS${KGRN}"
+echo -e "${KGRN}SUCCESS${KNRM}"
 cleanup_and_exit 0

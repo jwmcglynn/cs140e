@@ -8,7 +8,7 @@ use std::time::Duration;
 
 use structopt::StructOpt;
 use serial::core::{CharSize, BaudRate, StopBits, FlowControl, SerialDevice, SerialPortSettings};
-use xmodem::Xmodem;
+use xmodem::{Xmodem, Progress};
 
 mod parsers;
 
@@ -24,7 +24,7 @@ struct Opt {
                 help = "Set baud rate", default_value = "115200")]
     baud_rate: BaudRate,
 
-    #[structopt(short = "t", long = "timeout",
+    #[structopt(short = "t", long = "timeout", parse(try_from_str),
                 help = "Set timeout in seconds", default_value = "10")]
     timeout: u64,
 
