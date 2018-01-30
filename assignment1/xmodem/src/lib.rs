@@ -231,6 +231,7 @@ impl<T: io::Read + io::Write> Xmodem<T> {
         if !self.started {
             self.write_byte(NAK)?;
             self.started = true;
+            (self.progress)(Progress::Started);
         }
 
         let header: u8 = self.read_byte(true)?;
@@ -250,6 +251,7 @@ impl<T: io::Read + io::Write> Xmodem<T> {
                 } else {
                     self.packet = self.packet.wrapping_add(1);
                     self.write_byte(ACK)?;
+                    (self.progress)(Progress::Packet(expected_packet_number));
                     Ok(128)
                 }
             }
@@ -301,6 +303,7 @@ impl<T: io::Read + io::Write> Xmodem<T> {
         }
 
         if !self.started {
+            (self.progress)(Progress::Waiting);
             self.expect_byte(NAK, "Expected NAK from receiver to indicate start")?;
             self.started = true;
         }
@@ -325,6 +328,7 @@ impl<T: io::Read + io::Write> Xmodem<T> {
             self.write_byte(checksum)?;
 
             self.expect_byte(ACK, "Expected ACK after sending packet")?;
+            (self.progress)(Progress::Packet(packet_number));
 
             self.packet = self.packet.wrapping_add(1);
             Ok(128)
