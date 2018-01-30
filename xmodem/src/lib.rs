@@ -161,15 +161,17 @@ impl<T: io::Read + io::Write> Xmodem<T> {
     }
 
     /// Reads a single byte from the inner I/O stream and compares it to `byte`.
-    /// If they differ, a `CAN` byte is written out to the inner stream and an
-    /// error of `InvalidData` with the message `expected` is returned.
-    /// Otherwise the byte is returned.
+    /// If the bytes match, the byte is returned as an `Ok`. If they differ and
+    /// the read byte is not `CAN`, an error of `InvalidData` with the message
+    /// `expected` is returned. If they differ and the read byte is `CAN`, an
+    /// error of `ConnectionAborted` is returned. In either case, if they bytes
+    /// differ, a `CAN` byte is written out to the inner stream.
     ///
     /// # Errors
     ///
     /// Returns an error if reading from the inner stream fails, if the read
-    /// byte was not `byte`, or if writing the `CAN` byte failed on byte
-    /// mismatch.
+    /// byte was not `byte`, if the read byte was `CAN` and `byte` is not `CAN`,
+    /// or if writing the `CAN` byte failed on byte mismatch.
     fn expect_byte_or_cancel(&mut self, byte: u8, msg: &'static str) -> io::Result<u8> {
         unimplemented!()
     }
@@ -253,7 +255,7 @@ impl<T: io::Read + io::Write> Xmodem<T> {
     /// Flush this output stream, ensuring that all intermediately buffered
     /// contents reach their destination.
     ///
-    /// Errors
+    /// # Errors
     ///
     /// It is considered an error if not all bytes could be written due to I/O
     /// errors or EOF being reached.
