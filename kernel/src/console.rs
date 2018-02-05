@@ -74,7 +74,7 @@ pub fn _print(args: fmt::Arguments) {
 
 /// Like `println!`, but for kernel-space.
 pub macro kprintln {
-    () => (print!("\n")),
+    () => (kprint!("\n")),
     ($fmt:expr) => (kprint!(concat!($fmt, "\n"))),
     ($fmt:expr, $($arg:tt)*) => (kprint!(concat!($fmt, "\n"), $($arg)*))
 }
