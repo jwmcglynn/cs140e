@@ -1,4 +1,4 @@
-use std::sync::atomic::AtomicBool;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::cell::UnsafeCell;
 use std::ops::{DerefMut, Deref, Drop};
 
@@ -29,15 +29,20 @@ impl<T> Mutex<T> {
 }
 
 impl<T> Mutex<T> {
-    // Once MMU/cache is enabled, do the right thing here.
-    //
-    // For now, we don't need any real synchronization.
+    // Once MMU/cache is enabled, do the right thing here. For now, we don't
+    // need any real synchronization.
     #[inline(never)]
     pub fn lock(&self) -> MutexGuard<T> {
+        // Wait until we can "aquire" the lock, then "acquire" it.
+        while self.lock.load(Ordering::Relaxed) { }
+        self.lock.store(true, Ordering::Relaxed);
+
         MutexGuard { lock: &self }
     }
 
-    fn unlock(&self) { }
+    fn unlock(&self) {
+        self.lock.store(false, Ordering::Relaxed);
+    }
 }
 
 impl<'a, T: 'a> Deref for MutexGuard<'a, T> {
