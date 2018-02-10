@@ -155,9 +155,9 @@ fn test_transmit_reported_bytes() {
 
 #[test]
 fn test_raw_transmission() {
-    let mut input = [0u8; 128];
-    let mut output = [0u8; 128];
-    (0..128).into_iter().enumerate().for_each(|(i, b)| input[i] = b);
+    let mut input = [0u8; 256];
+    let mut output = [0u8; 256];
+    (0..256usize).into_iter().enumerate().for_each(|(i, b)| input[i] = b as u8);
 
     let (mut tx, mut rx) = pipe();
     let tx_thread = std::thread::spawn(move || {
@@ -173,13 +173,21 @@ fn test_raw_transmission() {
     let rx_buf = tx_thread.join().expect("tx join okay");
     let tx_buf = rx_thread.join().expect("rx join okay");
 
-    assert_eq!(rx_buf.len(), 134);
+    // check packet 1
     assert_eq!(&rx_buf[0..3], &[SOH, 1, 255 - 1]);
-    assert_eq!(&rx_buf[3..(128 + 3)], &input[..]);
-    assert_eq!(rx_buf[131], input.iter().fold(0, |a: u8, b| a.wrapping_add(*b)));
-    assert_eq!(&rx_buf[132..134], &[EOT, EOT]);
+    assert_eq!(&rx_buf[3..(3 + 128)], &input[..128]);
+    assert_eq!(rx_buf[131], input[..128].iter().fold(0, |a: u8, b| a.wrapping_add(*b)));
 
-    assert_eq!(&tx_buf, &[NAK, ACK, NAK, ACK]);
+    // check packet 2
+    assert_eq!(&rx_buf[132..135], &[SOH, 2, 255 - 2]);
+    assert_eq!(&rx_buf[135..(135 + 128)], &input[128..]);
+    assert_eq!(rx_buf[263], input[128..].iter().fold(0, |a: u8, b| a.wrapping_add(*b)));
+
+    // check EOT
+    assert_eq!(&rx_buf[264..], &[EOT, EOT]);
+
+    // check receiver responses
+    assert_eq!(&tx_buf, &[NAK, ACK, ACK, NAK, ACK]);
 }
 
 #[test]
