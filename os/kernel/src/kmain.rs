@@ -22,13 +22,22 @@ use pi::gpio::Gpio;
 
 #[no_mangle]
 pub extern "C" fn kmain() {
-    let mut gpio16 = Gpio::new(16).into_output();
+    let mut loading_leds = [
+        Gpio::new(5).into_output(),
+        Gpio::new(6).into_output(),
+        Gpio::new(13).into_output(),
+        Gpio::new(19).into_output(),
+        Gpio::new(26).into_output()];
 
-    // Continuously set and clear GPIO 16.
     loop {
-        gpio16.set();
-        spin_sleep_ms(100);
-        gpio16.clear();
-        spin_sleep_ms(100);
+        for ref mut led in loading_leds.iter_mut() {
+            led.set();
+            spin_sleep_ms(100);
+        }
+
+        for ref mut led in loading_leds.iter_mut() {
+            led.clear();
+            spin_sleep_ms(100);
+        }
     }
 }

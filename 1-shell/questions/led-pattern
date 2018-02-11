@@ -1,0 +1,1 @@
+I created a pattern that mimics an indeterminate progress bar: I lined the LEDs in a line, and then lit them one-by-one in sequence, then turned them off one-by-one in sequence, to make it look like a sliding bar.
