@@ -1,0 +1,1 @@
+If the client fabricates states, there's no way of knowing what the current state of the GPIO pin without reading back the register.  Then, each operation would have to check the value of the register and transform the state before operating, and when this happens sticky state such as input may not work until after the first call.

@@ -1,0 +1,1 @@
+For 0-blinky, I implemented start->output, and then output(set) and output(clear), which enabled turning on an off the LED.
