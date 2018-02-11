@@ -30,7 +30,7 @@ struct Registers {
     MCR: Volatile<u32>, // Controls modem signals.
     LSR: Volatile<u32>, // Data status.
     MSR: ReadVolatile<u32>, // Modem status.
-    SCRATCH: Volatile<u32>, // Scratch register.
+    SCRATCH: Reserved<u32>, // Scratch register, not used.
     CNTL: Volatile<u32>, // Control, provides access to additional features.
     STAT: ReadVolatile<u32>, // miniUART status.
     BAUD: Volatile<u32>, // Baud rate.
@@ -108,7 +108,7 @@ impl MiniUart {
         while !self.has_byte() {
             // Check for timeout.
             if let Some(duration) = self.timeout {
-                if start_time + (duration as u64) > timer::current_time() {
+                if timer::current_time() > start_time + (duration as u64) * 1000 {
                     return Err(());
                 }
             }
@@ -127,21 +127,66 @@ impl MiniUart {
     }
 }
 
-// FIXME: Implement `fmt::Write` for `MiniUart`. A b'\r' byte should be written
-// before writing any b'\n' byte.
+impl fmt::Write for MiniUart {
+    /// Writes a string to the miniUart. For any \n character, a \r is
+    /// automatically written preceding it.
+    fn write_str(&mut self, s: &str) -> fmt::Result {
+        let bytes: &[u8] = s.as_bytes();
+        for &byte in bytes {
+            // Write a \r before a \n.
+            if byte == b'\n' {
+                self.write_byte(b'\r');
+            }
+
+            self.write_byte(byte);
+        }
+
+        Ok(())
+    }
+}
+
 
 #[cfg(feature = "std")]
 mod uart_io {
     use std::io;
     use super::MiniUart;
 
-    // FIXME: Implement `io::Read` and `io::Write` for `MiniUart`.
-    //
-    // The `io::Read::read()` implementation must respect the read timeout by
-    // waiting at most that time for the _first byte_. It should not wait for
-    // any additional bytes but _should_ read as many bytes as possible. If the
-    // read times out, an error of kind `TimedOut` should be returned.
-    //
-    // The `io::Write::write()` method must write all of the requested bytes
-    // before returning.
+    impl io::Read for MiniUart {
+        /// Waits until the timeout duration but data to arrive, and then reads
+        /// any available data, up to buf.len() bytes.
+        fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
+            if self.wait_for_byte().is_err() {
+                Err(io::Error::new(io::ErrorKind::TimedOut,
+                                   "Timeout waiting for data"))
+            } else {
+                let mut bytes_read: usize = 0;
+                while self.has_byte() && bytes_read < buf.len() {
+                    buf[bytes_read] = self.read_byte();
+                    bytes_read += 1;
+                }
+
+                Ok(bytes_read)
+            }
+        }
+    }
+
+    impl io::Write for MiniUart {
+        /// Write the requested buffer to the miniUART, and wait for it to
+        /// finish transmitting before returning.
+        fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
+            for &byte in buf {
+                self.write_byte(byte);
+            }
+
+            Ok(buf.len())
+        }
+
+        /// Flush the buffer (no-ops for miniUART).
+        fn flush(&mut self) -> io::Result<()> {
+            // Technically the miniUART may still be transmitting, but the
+            // buffers are hardware buffers and will not be reset if this object
+            // is destroyed, so it's safe to no-op this flush() function.
+            Ok(())
+        }
+    }
 }

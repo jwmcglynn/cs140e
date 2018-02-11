@@ -21,6 +21,9 @@ use pi::timer::spin_sleep_ms;
 use pi::gpio::Gpio;
 use pi::uart::MiniUart;
 
+use std::fmt::Write;
+use std::io::{Read, Write as OtherWrite};
+
 #[no_mangle]
 pub extern "C" fn kmain() {
     let mut loading_leds = [
@@ -35,11 +38,35 @@ pub extern "C" fn kmain() {
         spin_sleep_ms(100);
     }
 
+    spin_sleep_ms(2000);
+
+    for ref mut led in loading_leds.iter_mut() {
+        led.clear();
+        spin_sleep_ms(100);
+    }
+
     let mut uart = MiniUart::new();
     let mut activity_led = Gpio::new(16).into_output();
+
+    uart.write_str("Hello, world!\n\n");
+    uart.set_read_timeout(5000);
+
     loop {
-        let byte = uart.read_byte();
-        uart.write_byte(byte);
+        uart.write_str("> ");
+
+        let mut buf = [0u8; 16];
+        match uart.read(&mut buf) {
+            Err(_) => {
+                uart.write_str("\nTimeout\n");
+                continue;
+            },
+
+            Ok(bytes) => {
+                std::fmt::Write::write_fmt(&mut uart, format_args!("\nGOT({}): ", bytes));
+                uart.write(&buf[0..bytes]);
+                uart.write_str("\n");
+            }
+        }
 
         activity_led.set();
         spin_sleep_ms(25);
