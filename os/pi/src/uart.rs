@@ -23,7 +23,17 @@ enum LsrStatus {
 #[repr(C)]
 #[allow(non_snake_case)]
 struct Registers {
-    // FIXME: Declare the "MU" registers from page 8.
+    IO: Volatile<u32>, // IO read/write.
+    IER: Volatile<u32>, // Interrupt enable.
+    IIR: Volatile<u32>, // Interrupt status.
+    LCR: Volatile<u32>, // Line data format control.
+    MCR: Volatile<u32>, // Controls modem signals.
+    LSR: Volatile<u32>, // Data status.
+    MSR: ReadVolatile<u32>, // Modem status.
+    SCRATCH: Volatile<u32>, // Scratch register.
+    CNTL: Volatile<u32>, // Control, provides access to additional features.
+    STAT: ReadVolatile<u32>, // miniUART status.
+    BAUD: Volatile<u32>, // Baud rate.
 }
 
 /// The Raspberry Pi's "mini UART".
@@ -47,26 +57,41 @@ impl MiniUart {
             &mut *(MU_REG_BASE as *mut Registers)
         };
 
-        // FIXME: Implement remaining mini UART initialization.
-        unimplemented!()
+        registers.LCR.write(0x3); // Enable 8-bit mode.
+
+        // The baud register is (system_clock_rate / (8 * desired_baud) - 1)
+        // For 115200, this is 270.
+        registers.BAUD.write(270);
+
+        Gpio::new(14).into_alt(Function::Alt5);
+        Gpio::new(15).into_alt(Function::Alt5);
+
+        registers.CNTL.write(0x3); // Enable RX/TX.
+
+        MiniUart { registers, timeout: None }
     }
 
     /// Set the read timeout to `milliseconds` milliseconds.
     pub fn set_read_timeout(&mut self, milliseconds: u32) {
-        unimplemented!()
+        self.timeout = Some(milliseconds);
     }
 
     /// Write the byte `byte`. This method blocks until there is space available
     /// in the output FIFO.
     pub fn write_byte(&mut self, byte: u8) {
-        unimplemented!()
+        // Wait until the transmit FIFO can accept at least one byte.
+        while !self.registers.LSR.has_mask(LsrStatus::TxAvailable as u32) {
+            continue
+        }
+
+        self.registers.IO.write(byte as u32);
     }
 
     /// Returns `true` if there is at least one byte ready to be read. If this
     /// method returns `true`, a subsequent call to `read_byte` is guaranteed to
     /// return immediately. This method does not block.
     pub fn has_byte(&self) -> bool {
-        unimplemented!()
+        self.registers.LSR.has_mask(LsrStatus::DataReady as u32)
     }
 
     /// Blocks until there is a byte ready to read. If a read timeout is set,
@@ -78,12 +103,27 @@ impl MiniUart {
     /// returns `Ok(())`, a subsequent call to `read_byte` is guaranteed to
     /// return immediately.
     pub fn wait_for_byte(&self) -> Result<(), ()> {
-        unimplemented!()
+        let start_time: u64 = timer::current_time();
+
+        while !self.has_byte() {
+            // Check for timeout.
+            if let Some(duration) = self.timeout {
+                if start_time + (duration as u64) > timer::current_time() {
+                    return Err(());
+                }
+            }
+        }
+
+        Ok(())
     }
 
     /// Reads a byte. Blocks indefinitely until a byte is ready to be read.
     pub fn read_byte(&mut self) -> u8 {
-        unimplemented!()
+        while !self.has_byte() {
+            continue
+        }
+
+        (self.registers.IO.read() & 0xFF) as u8
     }
 }
 
