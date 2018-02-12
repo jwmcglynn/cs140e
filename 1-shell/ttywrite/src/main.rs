@@ -3,6 +3,7 @@ extern crate structopt;
 extern crate xmodem;
 #[macro_use] extern crate structopt_derive;
 
+use std::io::Write;
 use std::path::PathBuf;
 use std::time::Duration;
 
@@ -77,6 +78,7 @@ fn main() {
         let bytes = Xmodem::transmit_with_progress(reader, serial, |progress| {
             if let Progress::Packet(_) = progress {
                 print!(".");
+                io::stdout().flush().unwrap();
             } else if let Progress::Waiting = progress {
                 println!("Ready");
             } else {

@@ -1,0 +1,5 @@
+The bootloader timeout is necessary because the Xmodem protocol requires both the sender and receiver to be connected to operate correctly; if the receiver starts before the sender, it will send a NAK and the receiver will never got receive it.
+
+The receiver also relies on the sender to respond in various states; if the sender disconnects mid-transmission the receiver will never recover.
+
+The timeout provides a convenient way to reset back to the initial state.  The downside is that it can take up to 750ms for the transmission to start (so that the timeout happens and we re-send the NAK to initiate transmission).
