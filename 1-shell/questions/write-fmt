@@ -1,0 +1,1 @@
+The write_fmt call is called on the MutexGuard object.  This implements the Deref/DerefMut trait, so Rust automatically invokes the call on the underlying object.  fmt::Write provides a default implementation of this method, which formats the string and invokes invokes another fmt::Write method, write_str with the result.

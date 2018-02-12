@@ -1,0 +1,6 @@
+The shell makes use of:
+- Console, to handle reading and writing data from the user.
+- Uart, to communicate with the hardware for the console.
+- Gpio, used during setup of the Uart.
+- StackVec, for holding the user's typed characters.
+- Volatile to access hardware registers, although a different one versus the one that was written earlier in assignment 1.
