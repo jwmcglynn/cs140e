@@ -2,10 +2,12 @@ TARGET ?= aarch64-none-elf
 CROSS ?= $(TARGET)
 
 CC := $(CROSS)-gcc
+TTYWRITE ?= ttywrite
+PI_TTY ?= /dev/tty.SLAB_USBtoUART
 CCFLAGS ?= -Wall -O2 -nostdlib -nostartfiles -ffreestanding -pie -fpie
-# LDFLAGS ?= --gc-sections -static -pie -nostdlib -nostartfiles --no-dynamic-linker
 LDFLAGS ?= --gc-sections -static -nostdlib -nostartfiles --no-dynamic-linker
 XARGO ?= CARGO_INCREMENTAL=0 RUST_TARGET_PATH="$(shell pwd)" xargo
+CARGO ?= cargo
 
 LD_LAYOUT := ext/layout.ld
 
@@ -14,14 +16,15 @@ RUST_BUILD_DIR := target/$(TARGET)
 RUST_DEBUG_LIB := $(RUST_BUILD_DIR)/debug/lib$(RUST_BINARY).a
 RUST_RELEASE_LIB := $(RUST_BUILD_DIR)/release/lib$(RUST_BINARY).a
 
-RUST_DEPS = Xargo.toml Cargo.toml build.rs $(LD_LAYOUT) src/*
+RUST_LIB_DEPS = ../pi/src/* ../pi/src/*/**
+RUST_DEPS = Xargo.toml Cargo.toml build.rs $(LD_LAYOUT) src/* $(RUST_LIB_DEPS)
 EXT_DEPS = $(BUILD_DIR)/init.o
 
 BUILD_DIR := build
 KERNEL := $(BUILD_DIR)/$(RUST_BINARY)
 RUST_LIB := $(BUILD_DIR)/$(RUST_BINARY).a
 
-.PHONY: all clean check
+.PHONY: all test clean check install
 
 VPATH = ext
 
@@ -29,6 +32,12 @@ all: $(KERNEL).hex $(KERNEL).bin
 
 check:
 	@$(XARGO) check --target=$(TARGET)
+
+test:
+	@$(CARGO) test
+
+install: $(KERNEL).bin
+	$(TTYWRITE) -i $< $(PI_TTY)
 
 $(RUST_DEBUG_LIB): $(RUST_DEPS)
 	@echo "+ Building $@ [xargo]"

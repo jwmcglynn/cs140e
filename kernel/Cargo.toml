@@ -14,7 +14,6 @@ debug = true
 
 [profile.test]
 panic = "abort"
-lto = true
 debug = true
 
 [profile.release]

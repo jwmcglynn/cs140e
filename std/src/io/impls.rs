@@ -28,15 +28,15 @@ impl<'a, R: Read + ?Sized> Read for &'a mut R {
         (**self).initializer()
     }
 
-    // #[inline]
-    // fn read_to_end(&mut self, buf: &mut Vec<u8>) -> io::Result<usize> {
-    //     (**self).read_to_end(buf)
-    // }
+    #[inline]
+    fn read_to_end(&mut self, buf: &mut Vec<u8>) -> io::Result<usize> {
+        (**self).read_to_end(buf)
+    }
 
-    // #[inline]
-    // fn read_to_string(&mut self, buf: &mut String) -> io::Result<usize> {
-    //     (**self).read_to_string(buf)
-    // }
+    #[inline]
+    fn read_to_string(&mut self, buf: &mut String) -> io::Result<usize> {
+        (**self).read_to_string(buf)
+    }
 
     #[inline]
     fn read_exact(&mut self, buf: &mut [u8]) -> io::Result<()> {
@@ -74,85 +74,85 @@ impl<'a, B: BufRead + ?Sized> BufRead for &'a mut B {
     #[inline]
     fn consume(&mut self, amt: usize) { (**self).consume(amt) }
 
-    // #[inline]
-    // fn read_until(&mut self, byte: u8, buf: &mut Vec<u8>) -> io::Result<usize> {
-    //     (**self).read_until(byte, buf)
-    // }
+    #[inline]
+    fn read_until(&mut self, byte: u8, buf: &mut Vec<u8>) -> io::Result<usize> {
+        (**self).read_until(byte, buf)
+    }
 
-    // #[inline]
-    // fn read_line(&mut self, buf: &mut String) -> io::Result<usize> {
-    //     (**self).read_line(buf)
-    // }
+    #[inline]
+    fn read_line(&mut self, buf: &mut String) -> io::Result<usize> {
+        (**self).read_line(buf)
+    }
 }
 
-// #[stable(feature = "rust1", since = "1.0.0")]
-// impl<R: Read + ?Sized> Read for Box<R> {
-//     #[inline]
-//     fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
-//         (**self).read(buf)
-//     }
+#[stable(feature = "rust1", since = "1.0.0")]
+impl<R: Read + ?Sized> Read for Box<R> {
+    #[inline]
+    fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
+        (**self).read(buf)
+    }
 
-//     #[inline]
-//     unsafe fn initializer(&self) -> Initializer {
-//         (**self).initializer()
-//     }
+    #[inline]
+    unsafe fn initializer(&self) -> Initializer {
+        (**self).initializer()
+    }
 
-//     #[inline]
-//     fn read_to_end(&mut self, buf: &mut Vec<u8>) -> io::Result<usize> {
-//         (**self).read_to_end(buf)
-//     }
+    #[inline]
+    fn read_to_end(&mut self, buf: &mut Vec<u8>) -> io::Result<usize> {
+        (**self).read_to_end(buf)
+    }
 
-//     #[inline]
-//     fn read_to_string(&mut self, buf: &mut String) -> io::Result<usize> {
-//         (**self).read_to_string(buf)
-//     }
+    #[inline]
+    fn read_to_string(&mut self, buf: &mut String) -> io::Result<usize> {
+        (**self).read_to_string(buf)
+    }
 
-//     #[inline]
-//     fn read_exact(&mut self, buf: &mut [u8]) -> io::Result<()> {
-//         (**self).read_exact(buf)
-//     }
-// }
-// #[stable(feature = "rust1", since = "1.0.0")]
-// impl<W: Write + ?Sized> Write for Box<W> {
-//     #[inline]
-//     fn write(&mut self, buf: &[u8]) -> io::Result<usize> { (**self).write(buf) }
+    #[inline]
+    fn read_exact(&mut self, buf: &mut [u8]) -> io::Result<()> {
+        (**self).read_exact(buf)
+    }
+}
+#[stable(feature = "rust1", since = "1.0.0")]
+impl<W: Write + ?Sized> Write for Box<W> {
+    #[inline]
+    fn write(&mut self, buf: &[u8]) -> io::Result<usize> { (**self).write(buf) }
 
-//     #[inline]
-//     fn flush(&mut self) -> io::Result<()> { (**self).flush() }
+    #[inline]
+    fn flush(&mut self) -> io::Result<()> { (**self).flush() }
 
-//     #[inline]
-//     fn write_all(&mut self, buf: &[u8]) -> io::Result<()> {
-//         (**self).write_all(buf)
-//     }
+    #[inline]
+    fn write_all(&mut self, buf: &[u8]) -> io::Result<()> {
+        (**self).write_all(buf)
+    }
 
-//     #[inline]
-//     fn write_fmt(&mut self, fmt: fmt::Arguments) -> io::Result<()> {
-//         (**self).write_fmt(fmt)
-//     }
-// }
-// #[stable(feature = "rust1", since = "1.0.0")]
-// impl<S: Seek + ?Sized> Seek for Box<S> {
-//     #[inline]
-//     fn seek(&mut self, pos: SeekFrom) -> io::Result<u64> { (**self).seek(pos) }
-// }
-// #[stable(feature = "rust1", since = "1.0.0")]
-// impl<B: BufRead + ?Sized> BufRead for Box<B> {
-//     #[inline]
-//     fn fill_buf(&mut self) -> io::Result<&[u8]> { (**self).fill_buf() }
+    #[inline]
+    fn write_fmt(&mut self, fmt: fmt::Arguments) -> io::Result<()> {
+        (**self).write_fmt(fmt)
+    }
+}
+#[stable(feature = "rust1", since = "1.0.0")]
+impl<S: Seek + ?Sized> Seek for Box<S> {
+    #[inline]
+    fn seek(&mut self, pos: SeekFrom) -> io::Result<u64> { (**self).seek(pos) }
+}
+#[stable(feature = "rust1", since = "1.0.0")]
+impl<B: BufRead + ?Sized> BufRead for Box<B> {
+    #[inline]
+    fn fill_buf(&mut self) -> io::Result<&[u8]> { (**self).fill_buf() }
 
-//     #[inline]
-//     fn consume(&mut self, amt: usize) { (**self).consume(amt) }
+    #[inline]
+    fn consume(&mut self, amt: usize) { (**self).consume(amt) }
 
-//     #[inline]
-//     fn read_until(&mut self, byte: u8, buf: &mut Vec<u8>) -> io::Result<usize> {
-//         (**self).read_until(byte, buf)
-//     }
+    #[inline]
+    fn read_until(&mut self, byte: u8, buf: &mut Vec<u8>) -> io::Result<usize> {
+        (**self).read_until(byte, buf)
+    }
 
-//     #[inline]
-//     fn read_line(&mut self, buf: &mut String) -> io::Result<usize> {
-//         (**self).read_line(buf)
-//     }
-// }
+    #[inline]
+    fn read_line(&mut self, buf: &mut String) -> io::Result<usize> {
+        (**self).read_line(buf)
+    }
+}
 
 // =============================================================================
 // In-memory buffer implementations
@@ -207,13 +207,13 @@ impl<'a> Read for &'a [u8] {
         Ok(())
     }
 
-    // #[inline]
-    // fn read_to_end(&mut self, buf: &mut Vec<u8>) -> io::Result<usize> {
-    //     buf.extend_from_slice(*self);
-    //     let len = self.len();
-    //     *self = &self[len..];
-    //     Ok(len)
-    // }
+    #[inline]
+    fn read_to_end(&mut self, buf: &mut Vec<u8>) -> io::Result<usize> {
+        buf.extend_from_slice(*self);
+        let len = self.len();
+        *self = &self[len..];
+        Ok(len)
+    }
 }
 
 #[stable(feature = "rust1", since = "1.0.0")]
@@ -254,25 +254,25 @@ impl<'a> Write for &'a mut [u8] {
     fn flush(&mut self) -> io::Result<()> { Ok(()) }
 }
 
-// /// Write is implemented for `Vec<u8>` by appending to the vector.
-// /// The vector will grow as needed.
-// #[stable(feature = "rust1", since = "1.0.0")]
-// impl Write for Vec<u8> {
-//     #[inline]
-//     fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
-//         self.extend_from_slice(buf);
-//         Ok(buf.len())
-//     }
+/// Write is implemented for `Vec<u8>` by appending to the vector.
+/// The vector will grow as needed.
+#[stable(feature = "rust1", since = "1.0.0")]
+impl Write for Vec<u8> {
+    #[inline]
+    fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
+        self.extend_from_slice(buf);
+        Ok(buf.len())
+    }
 
-//     #[inline]
-//     fn write_all(&mut self, buf: &[u8]) -> io::Result<()> {
-//         self.extend_from_slice(buf);
-//         Ok(())
-//     }
+    #[inline]
+    fn write_all(&mut self, buf: &[u8]) -> io::Result<()> {
+        self.extend_from_slice(buf);
+        Ok(())
+    }
 
-//     #[inline]
-//     fn flush(&mut self) -> io::Result<()> { Ok(()) }
-// }
+    #[inline]
+    fn flush(&mut self) -> io::Result<()> { Ok(()) }
+}
 
 #[cfg(test)]
 mod tests {
