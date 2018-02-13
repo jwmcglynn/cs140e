@@ -1,11 +1,11 @@
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::cell::UnsafeCell;
 use std::ops::{DerefMut, Deref, Drop};
+use std::fmt;
 
 #[repr(align(32))]
 pub struct Mutex<T> {
     data: UnsafeCell<T>,
-    #[allow(unused)]
     lock: AtomicBool,
 }
 
@@ -31,13 +31,26 @@ impl<T> Mutex<T> {
 impl<T> Mutex<T> {
     // Once MMU/cache is enabled, do the right thing here. For now, we don't
     // need any real synchronization.
+    pub fn try_lock(&self) -> Option<MutexGuard<T>> {
+        if !self.lock.load(Ordering::Relaxed) {
+            self.lock.store(true, Ordering::Relaxed);
+            Some(MutexGuard { lock: &self })
+        } else {
+            None
+        }
+    }
+
+    // Once MMU/cache is enabled, do the right thing here. For now, we don't
+    // need any real synchronization.
     #[inline(never)]
     pub fn lock(&self) -> MutexGuard<T> {
         // Wait until we can "aquire" the lock, then "acquire" it.
-        while self.lock.load(Ordering::Relaxed) { }
-        self.lock.store(true, Ordering::Relaxed);
-
-        MutexGuard { lock: &self }
+        loop {
+            match self.try_lock() {
+                Some(guard) => return guard,
+                None => continue
+            }
+        }
     }
 
     fn unlock(&self) {
@@ -62,5 +75,14 @@ impl<'a, T: 'a> DerefMut for MutexGuard<'a, T> {
 impl<'a, T: 'a> Drop for MutexGuard<'a, T> {
     fn drop(&mut self) {
         self.lock.unlock()
+    }
+}
+
+impl<T: fmt::Debug> fmt::Debug for Mutex<T> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self.try_lock() {
+            Some(guard) => f.debug_struct("Mutex").field("data", &&*guard).finish(),
+            None => f.debug_struct("Mutex").field("data", &"<locked>").finish()
+        }
     }
 }

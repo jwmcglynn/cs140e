@@ -10,7 +10,7 @@
 
 use io::prelude::*;
 
-// use core::convert::TryInto;
+use core::convert::TryInto;
 use cmp;
 use io::{self, Initializer, SeekFrom, Error, ErrorKind};
 
@@ -260,32 +260,32 @@ fn slice_write(pos_mut: &mut u64, slice: &mut [u8], buf: &[u8]) -> io::Result<us
     Ok(amt)
 }
 
-// // Resizing write implementation
-// fn vec_write(pos_mut: &mut u64, vec: &mut Vec<u8>, buf: &[u8]) -> io::Result<usize> {
-//     let pos: usize = (*pos_mut).try_into().map_err(|_| {
-//         Error::new(ErrorKind::InvalidInput,
-//                     "cursor position exceeds maximum possible vector length")
-//     })?;
-//     // Make sure the internal buffer is as least as big as where we
-//     // currently are
-//     let len = vec.len();
-//     if len < pos {
-//         // use `resize` so that the zero filling is as efficient as possible
-//         vec.resize(pos, 0);
-//     }
-//     // Figure out what bytes will be used to overwrite what's currently
-//     // there (left), and what will be appended on the end (right)
-//     {
-//         let space = vec.len() - pos;
-//         let (left, right) = buf.split_at(cmp::min(space, buf.len()));
-//         vec[pos..pos + left.len()].copy_from_slice(left);
-//         vec.extend_from_slice(right);
-//     }
+// Resizing write implementation
+fn vec_write(pos_mut: &mut u64, vec: &mut Vec<u8>, buf: &[u8]) -> io::Result<usize> {
+    let pos: usize = (*pos_mut).try_into().map_err(|_| {
+        Error::new(ErrorKind::InvalidInput,
+                    "cursor position exceeds maximum possible vector length")
+    })?;
+    // Make sure the internal buffer is as least as big as where we
+    // currently are
+    let len = vec.len();
+    if len < pos {
+        // use `resize` so that the zero filling is as efficient as possible
+        vec.resize(pos, 0);
+    }
+    // Figure out what bytes will be used to overwrite what's currently
+    // there (left), and what will be appended on the end (right)
+    {
+        let space = vec.len() - pos;
+        let (left, right) = buf.split_at(cmp::min(space, buf.len()));
+        vec[pos..pos + left.len()].copy_from_slice(left);
+        vec.extend_from_slice(right);
+    }
 
-//     // Bump us forward
-//     *pos_mut = (pos + buf.len()) as u64;
-//     Ok(buf.len())
-// }
+    // Bump us forward
+    *pos_mut = (pos + buf.len()) as u64;
+    Ok(buf.len())
+}
 
 #[stable(feature = "rust1", since = "1.0.0")]
 impl<'a> Write for Cursor<&'a mut [u8]> {
@@ -296,30 +296,30 @@ impl<'a> Write for Cursor<&'a mut [u8]> {
     fn flush(&mut self) -> io::Result<()> { Ok(()) }
 }
 
-// #[unstable(feature = "cursor_mut_vec", issue = "30132")]
-// impl<'a> Write for Cursor<&'a mut Vec<u8>> {
-//     fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
-//         vec_write(&mut self.pos, self.inner, buf)
-//     }
-//     fn flush(&mut self) -> io::Result<()> { Ok(()) }
-// }
+#[unstable(feature = "cursor_mut_vec", issue = "30132")]
+impl<'a> Write for Cursor<&'a mut Vec<u8>> {
+    fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
+        vec_write(&mut self.pos, self.inner, buf)
+    }
+    fn flush(&mut self) -> io::Result<()> { Ok(()) }
+}
 
-// #[stable(feature = "rust1", since = "1.0.0")]
-// impl Write for Cursor<Vec<u8>> {
-//     fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
-//         vec_write(&mut self.pos, &mut self.inner, buf)
-//     }
-//     fn flush(&mut self) -> io::Result<()> { Ok(()) }
-// }
+#[stable(feature = "rust1", since = "1.0.0")]
+impl Write for Cursor<Vec<u8>> {
+    fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
+        vec_write(&mut self.pos, &mut self.inner, buf)
+    }
+    fn flush(&mut self) -> io::Result<()> { Ok(()) }
+}
 
-// #[stable(feature = "cursor_box_slice", since = "1.5.0")]
-// impl Write for Cursor<Box<[u8]>> {
-//     #[inline]
-//     fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
-//         slice_write(&mut self.pos, &mut self.inner, buf)
-//     }
-//     fn flush(&mut self) -> io::Result<()> { Ok(()) }
-// }
+#[stable(feature = "cursor_box_slice", since = "1.5.0")]
+impl Write for Cursor<Box<[u8]>> {
+    #[inline]
+    fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
+        slice_write(&mut self.pos, &mut self.inner, buf)
+    }
+    fn flush(&mut self) -> io::Result<()> { Ok(()) }
+}
 
 #[cfg(test)]
 mod tests {

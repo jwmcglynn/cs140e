@@ -58,211 +58,210 @@
 /// panic!(4); // panic with the value of 4 to be collected elsewhere
 /// panic!("this is a {} {message}", "fancy", message = "message");
 /// ```
+//- #[macro_export]
+//- #[stable(feature = "rust1", since = "1.0.0")]
+//- #[allow_internal_unstable]
+//- macro_rules! panic {
+//-     () => ({
+//-         panic!("explicit panic")
+//-     });
+//-     ($msg:expr) => ({
+//-         $crate::rt::begin_panic($msg, &(file!(), line!(), __rust_unstable_column!()))
+//-     });
+//-     ($fmt:expr, $($arg:tt)+) => ({
+//-         $crate::rt::begin_panic_fmt(&format_args!($fmt, $($arg)+),
+//-                                     &(file!(), line!(), __rust_unstable_column!()))
+//-     });
+//- }
 
-// #[macro_export]
-// #[stable(feature = "rust1", since = "1.0.0")]
-// #[allow_internal_unstable]
-// macro_rules! panic {
-//     () => ({
-//         panic!("explicit panic")
-//     });
-//     ($msg:expr) => ({
-//         $crate::rt::begin_panic($msg, &(file!(), line!(), __rust_unstable_column!()))
-//     });
-//     ($fmt:expr, $($arg:tt)+) => ({
-//         $crate::rt::begin_panic_fmt(&format_args!($fmt, $($arg)+),
-//                                     &(file!(), line!(), __rust_unstable_column!()))
-//     });
-// }
+/// Macro for printing to the standard output.
+///
+/// Equivalent to the [`println!`] macro except that a newline is not printed at
+/// the end of the message.
+///
+/// Note that stdout is frequently line-buffered by default so it may be
+/// necessary to use [`io::stdout().flush()`][flush] to ensure the output is emitted
+/// immediately.
+///
+/// Use `print!` only for the primary output of your program.  Use
+/// [`eprint!`] instead to print error and progress messages.
+///
+/// [`println!`]: ../std/macro.println.html
+/// [flush]: ../std/io/trait.Write.html#tymethod.flush
+/// [`eprint!`]: ../std/macro.eprint.html
+///
+/// # Panics
+///
+/// Panics if writing to `io::stdout()` fails.
+///
+/// # Examples
+///
+/// ```
+/// use std::io::{self, Write};
+///
+/// print!("this ");
+/// print!("will ");
+/// print!("be ");
+/// print!("on ");
+/// print!("the ");
+/// print!("same ");
+/// print!("line ");
+///
+/// io::stdout().flush().unwrap();
+///
+/// print!("this string has a newline, why not choose println! instead?\n");
+///
+/// io::stdout().flush().unwrap();
+/// ```
+//- #[macro_export]
+//- #[stable(feature = "rust1", since = "1.0.0")]
+//- #[allow_internal_unstable]
+//- macro_rules! print {
+//-     ($($arg:tt)*) => ($crate::io::_print(format_args!($($arg)*)));
+//- }
 
-// /// Macro for printing to the standard output.
-// ///
-// /// Equivalent to the [`println!`] macro except that a newline is not printed at
-// /// the end of the message.
-// ///
-// /// Note that stdout is frequently line-buffered by default so it may be
-// /// necessary to use [`io::stdout().flush()`][flush] to ensure the output is emitted
-// /// immediately.
-// ///
-// /// Use `print!` only for the primary output of your program.  Use
-// /// [`eprint!`] instead to print error and progress messages.
-// ///
-// /// [`println!`]: ../std/macro.println.html
-// /// [flush]: ../std/io/trait.Write.html#tymethod.flush
-// /// [`eprint!`]: ../std/macro.eprint.html
-// ///
-// /// # Panics
-// ///
-// /// Panics if writing to `io::stdout()` fails.
-// ///
-// /// # Examples
-// ///
-// /// ```
-// /// use std::io::{self, Write};
-// ///
-// /// print!("this ");
-// /// print!("will ");
-// /// print!("be ");
-// /// print!("on ");
-// /// print!("the ");
-// /// print!("same ");
-// /// print!("line ");
-// ///
-// /// io::stdout().flush().unwrap();
-// ///
-// /// print!("this string has a newline, why not choose println! instead?\n");
-// ///
-// /// io::stdout().flush().unwrap();
-// /// ```
-// #[macro_export]
-// #[stable(feature = "rust1", since = "1.0.0")]
-// #[allow_internal_unstable]
-// macro_rules! print {
-//     ($($arg:tt)*) => ($crate::io::_print(format_args!($($arg)*)));
-// }
+/// Macro for printing to the standard output, with a newline.
+///
+/// On all platforms, the newline is the LINE FEED character (`\n`/`U+000A`) alone
+/// (no additional CARRIAGE RETURN (`\r`/`U+000D`).
+///
+/// Use the [`format!`] syntax to write data to the standard output.
+/// See [`std::fmt`] for more information.
+///
+/// Use `println!` only for the primary output of your program.  Use
+/// [`eprintln!`] instead to print error and progress messages.
+///
+/// [`format!`]: ../std/macro.format.html
+/// [`std::fmt`]: ../std/fmt/index.html
+/// [`eprintln!`]: ../std/macro.eprint.html
+/// # Panics
+///
+/// Panics if writing to `io::stdout` fails.
+///
+/// # Examples
+///
+/// ```
+/// println!(); // prints just a newline
+/// println!("hello there!");
+/// println!("format {} arguments", "some");
+/// ```
+//- #[macro_export]
+//- #[stable(feature = "rust1", since = "1.0.0")]
+//- macro_rules! println {
+//-     () => (print!("\n"));
+//-     ($fmt:expr) => (print!(concat!($fmt, "\n")));
+//-     ($fmt:expr, $($arg:tt)*) => (print!(concat!($fmt, "\n"), $($arg)*));
+//- }
 
-// /// Macro for printing to the standard output, with a newline.
-// ///
-// /// On all platforms, the newline is the LINE FEED character (`\n`/`U+000A`) alone
-// /// (no additional CARRIAGE RETURN (`\r`/`U+000D`).
-// ///
-// /// Use the [`format!`] syntax to write data to the standard output.
-// /// See [`std::fmt`] for more information.
-// ///
-// /// Use `println!` only for the primary output of your program.  Use
-// /// [`eprintln!`] instead to print error and progress messages.
-// ///
-// /// [`format!`]: ../std/macro.format.html
-// /// [`std::fmt`]: ../std/fmt/index.html
-// /// [`eprintln!`]: ../std/macro.eprint.html
-// /// # Panics
-// ///
-// /// Panics if writing to `io::stdout` fails.
-// ///
-// /// # Examples
-// ///
-// /// ```
-// /// println!(); // prints just a newline
-// /// println!("hello there!");
-// /// println!("format {} arguments", "some");
-// /// ```
-// #[macro_export]
-// #[stable(feature = "rust1", since = "1.0.0")]
-// macro_rules! println {
-//     () => (print!("\n"));
-//     ($fmt:expr) => (print!(concat!($fmt, "\n")));
-//     ($fmt:expr, $($arg:tt)*) => (print!(concat!($fmt, "\n"), $($arg)*));
-// }
+/// Macro for printing to the standard error.
+///
+/// Equivalent to the [`print!`] macro, except that output goes to
+/// [`io::stderr`] instead of `io::stdout`.  See [`print!`] for
+/// example usage.
+///
+/// Use `eprint!` only for error and progress messages.  Use `print!`
+/// instead for the primary output of your program.
+///
+/// [`io::stderr`]: ../std/io/struct.Stderr.html
+/// [`print!`]: ../std/macro.print.html
+///
+/// # Panics
+///
+/// Panics if writing to `io::stderr` fails.
+///
+/// # Examples
+///
+/// ```
+/// eprint!("Error: Could not complete task");
+/// ```
+//- #[macro_export]
+//- #[stable(feature = "eprint", since = "1.19.0")]
+//- #[allow_internal_unstable]
+//- macro_rules! eprint {
+//-     ($($arg:tt)*) => ($crate::io::_eprint(format_args!($($arg)*)));
+//- }
 
-// /// Macro for printing to the standard error.
-// ///
-// /// Equivalent to the [`print!`] macro, except that output goes to
-// /// [`io::stderr`] instead of `io::stdout`.  See [`print!`] for
-// /// example usage.
-// ///
-// /// Use `eprint!` only for error and progress messages.  Use `print!`
-// /// instead for the primary output of your program.
-// ///
-// /// [`io::stderr`]: ../std/io/struct.Stderr.html
-// /// [`print!`]: ../std/macro.print.html
-// ///
-// /// # Panics
-// ///
-// /// Panics if writing to `io::stderr` fails.
-// ///
-// /// # Examples
-// ///
-// /// ```
-// /// eprint!("Error: Could not complete task");
-// /// ```
-// #[macro_export]
-// #[stable(feature = "eprint", since = "1.19.0")]
-// #[allow_internal_unstable]
-// macro_rules! eprint {
-//     ($($arg:tt)*) => ($crate::io::_eprint(format_args!($($arg)*)));
-// }
+/// Macro for printing to the standard error, with a newline.
+///
+/// Equivalent to the [`println!`] macro, except that output goes to
+/// [`io::stderr`] instead of `io::stdout`.  See [`println!`] for
+/// example usage.
+///
+/// Use `eprintln!` only for error and progress messages.  Use `println!`
+/// instead for the primary output of your program.
+///
+/// [`io::stderr`]: ../std/io/struct.Stderr.html
+/// [`println!`]: ../std/macro.println.html
+///
+/// # Panics
+///
+/// Panics if writing to `io::stderr` fails.
+///
+/// # Examples
+///
+/// ```
+/// eprintln!("Error: Could not complete task");
+/// ```
+//- #[macro_export]
+//- #[stable(feature = "eprint", since = "1.19.0")]
+//- macro_rules! eprintln {
+//-     () => (eprint!("\n"));
+//-     ($fmt:expr) => (eprint!(concat!($fmt, "\n")));
+//-     ($fmt:expr, $($arg:tt)*) => (eprint!(concat!($fmt, "\n"), $($arg)*));
+//- }
 
-// /// Macro for printing to the standard error, with a newline.
-// ///
-// /// Equivalent to the [`println!`] macro, except that output goes to
-// /// [`io::stderr`] instead of `io::stdout`.  See [`println!`] for
-// /// example usage.
-// ///
-// /// Use `eprintln!` only for error and progress messages.  Use `println!`
-// /// instead for the primary output of your program.
-// ///
-// /// [`io::stderr`]: ../std/io/struct.Stderr.html
-// /// [`println!`]: ../std/macro.println.html
-// ///
-// /// # Panics
-// ///
-// /// Panics if writing to `io::stderr` fails.
-// ///
-// /// # Examples
-// ///
-// /// ```
-// /// eprintln!("Error: Could not complete task");
-// /// ```
-// #[macro_export]
-// #[stable(feature = "eprint", since = "1.19.0")]
-// macro_rules! eprintln {
-//     () => (eprint!("\n"));
-//     ($fmt:expr) => (eprint!(concat!($fmt, "\n")));
-//     ($fmt:expr, $($arg:tt)*) => (eprint!(concat!($fmt, "\n"), $($arg)*));
-// }
-
-// /// A macro to select an event from a number of receivers.
-// ///
-// /// This macro is used to wait for the first event to occur on a number of
-// /// receivers. It places no restrictions on the types of receivers given to
-// /// this macro, this can be viewed as a heterogeneous select.
-// ///
-// /// # Examples
-// ///
-// /// ```
-// /// #![feature(mpsc_select)]
-// ///
-// /// use std::thread;
-// /// use std::sync::mpsc;
-// ///
-// /// // two placeholder functions for now
-// /// fn long_running_thread() {}
-// /// fn calculate_the_answer() -> u32 { 42 }
-// ///
-// /// let (tx1, rx1) = mpsc::channel();
-// /// let (tx2, rx2) = mpsc::channel();
-// ///
-// /// thread::spawn(move|| { long_running_thread(); tx1.send(()).unwrap(); });
-// /// thread::spawn(move|| { tx2.send(calculate_the_answer()).unwrap(); });
-// ///
-// /// select! {
-// ///     _ = rx1.recv() => println!("the long running thread finished first"),
-// ///     answer = rx2.recv() => {
-// ///         println!("the answer was: {}", answer.unwrap());
-// ///     }
-// /// }
-// /// # drop(rx1.recv());
-// /// # drop(rx2.recv());
-// /// ```
-// ///
-// /// For more information about select, see the `std::sync::mpsc::Select` structure.
-// #[macro_export]
-// #[unstable(feature = "mpsc_select", issue = "27800")]
-// macro_rules! select {
-//     (
-//         $($name:pat = $rx:ident.$meth:ident() => $code:expr),+
-//     ) => ({
-//         use $crate::sync::mpsc::Select;
-//         let sel = Select::new();
-//         $( let mut $rx = sel.handle(&$rx); )+
-//         unsafe {
-//             $( $rx.add(); )+
-//         }
-//         let ret = sel.wait();
-//         $( if ret == $rx.id() { let $name = $rx.$meth(); $code } else )+
-//         { unreachable!() }
-//     })
-// }
+/// A macro to select an event from a number of receivers.
+///
+/// This macro is used to wait for the first event to occur on a number of
+/// receivers. It places no restrictions on the types of receivers given to
+/// this macro, this can be viewed as a heterogeneous select.
+///
+/// # Examples
+///
+/// ```
+/// #![feature(mpsc_select)]
+///
+/// use std::thread;
+/// use std::sync::mpsc;
+///
+/// // two placeholder functions for now
+/// fn long_running_thread() {}
+/// fn calculate_the_answer() -> u32 { 42 }
+///
+/// let (tx1, rx1) = mpsc::channel();
+/// let (tx2, rx2) = mpsc::channel();
+///
+/// thread::spawn(move|| { long_running_thread(); tx1.send(()).unwrap(); });
+/// thread::spawn(move|| { tx2.send(calculate_the_answer()).unwrap(); });
+///
+/// select! {
+///     _ = rx1.recv() => println!("the long running thread finished first"),
+///     answer = rx2.recv() => {
+///         println!("the answer was: {}", answer.unwrap());
+///     }
+/// }
+/// # drop(rx1.recv());
+/// # drop(rx2.recv());
+/// ```
+///
+/// For more information about select, see the `std::sync::mpsc::Select` structure.
+//- #[macro_export]
+//- #[unstable(feature = "mpsc_select", issue = "27800")]
+//- macro_rules! select {
+//-     (
+//-         $($name:pat = $rx:ident.$meth:ident() => $code:expr),+
+//-     ) => ({
+//-         use $crate::sync::mpsc::Select;
+//-         let sel = Select::new();
+//-         $( let mut $rx = sel.handle(&$rx); )+
+//-         unsafe {
+//-             $( $rx.add(); )+
+//-         }
+//-         let ret = sel.wait();
+//-         $( if ret == $rx.id() { let $name = $rx.$meth(); $code } else )+
+//-         { unreachable!() }
+//-     })
+//- }
 
 #[cfg(test)]
 macro_rules! assert_approx_eq {
@@ -704,38 +703,38 @@ pub mod builtin {
     macro_rules! include { ($file:expr) => ({ /* compiler built-in */ }) }
 }
 
-///// A macro for defining #[cfg] if-else statements.
-/////
-///// This is similar to the `if/elif` C preprocessor macro by allowing definition
-///// of a cascade of `#[cfg]` cases, emitting the implementation which matches
-///// first.
-/////
-///// This allows you to conveniently provide a long list #[cfg]'d blocks of code
-///// without having to rewrite each clause multiple times.
-//macro_rules! cfg_if {
-//    ($(
-//        if #[cfg($($meta:meta),*)] { $($it:item)* }
-//    ) else * else {
-//        $($it2:item)*
-//    }) => {
-//        __cfg_if_items! {
-//            () ;
-//            $( ( ($($meta),*) ($($it)*) ), )*
-//            ( () ($($it2)*) ),
-//        }
-//    }
-//}
+//- /// A macro for defining #[cfg] if-else statements.
+//- ///
+//- /// This is similar to the `if/elif` C preprocessor macro by allowing definition
+//- /// of a cascade of `#[cfg]` cases, emitting the implementation which matches
+//- /// first.
+//- ///
+//- /// This allows you to conveniently provide a long list #[cfg]'d blocks of code
+//- /// without having to rewrite each clause multiple times.
+//- macro_rules! cfg_if {
+//-     ($(
+//-         if #[cfg($($meta:meta),*)] { $($it:item)* }
+//-     ) else * else {
+//-         $($it2:item)*
+//-     }) => {
+//-         __cfg_if_items! {
+//-             () ;
+//-             $( ( ($($meta),*) ($($it)*) ), )*
+//-             ( () ($($it2)*) ),
+//-         }
+//-     }
+//- }
 
-//macro_rules! __cfg_if_items {
-//    (($($not:meta,)*) ; ) => {};
-//    (($($not:meta,)*) ; ( ($($m:meta),*) ($($it:item)*) ), $($rest:tt)*) => {
-//        __cfg_if_apply! { cfg(all(not(any($($not),*)), $($m,)*)), $($it)* }
-//        __cfg_if_items! { ($($not,)* $($m,)*) ; $($rest)* }
-//    }
-//}
+//- macro_rules! __cfg_if_items {
+//-     (($($not:meta,)*) ; ) => {};
+//-     (($($not:meta,)*) ; ( ($($m:meta),*) ($($it:item)*) ), $($rest:tt)*) => {
+//-         __cfg_if_apply! { cfg(all(not(any($($not),*)), $($m,)*)), $($it)* }
+//-         __cfg_if_items! { ($($not,)* $($m,)*) ; $($rest)* }
+//-     }
+//- }
 
-//macro_rules! __cfg_if_apply {
-//    ($m:meta, $($it:item)*) => {
-//        $(#[$m] $it)*
-//    }
-//}
+//- macro_rules! __cfg_if_apply {
+//-     ($m:meta, $($it:item)*) => {
+//-         $(#[$m] $it)*
+//-     }
+//- }

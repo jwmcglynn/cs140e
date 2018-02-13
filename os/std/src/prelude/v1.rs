@@ -25,10 +25,10 @@
 #[doc(no_inline)] pub use mem::drop;
 
 // Re-exported types and traits
-// #[stable(feature = "rust1", since = "1.0.0")]
-// #[doc(no_inline)] pub use boxed::Box;
-// #[stable(feature = "rust1", since = "1.0.0")]
-// #[doc(no_inline)] pub use borrow::ToOwned;
+#[stable(feature = "rust1", since = "1.0.0")]
+#[doc(no_inline)] pub use boxed::Box;
+#[stable(feature = "rust1", since = "1.0.0")]
+#[doc(no_inline)] pub use borrow::ToOwned;
 #[stable(feature = "rust1", since = "1.0.0")]
 #[doc(no_inline)] pub use clone::Clone;
 #[stable(feature = "rust1", since = "1.0.0")]
@@ -45,17 +45,9 @@
 #[doc(no_inline)] pub use option::Option::{self, Some, None};
 #[stable(feature = "rust1", since = "1.0.0")]
 #[doc(no_inline)] pub use result::Result::{self, Ok, Err};
-// #[stable(feature = "rust1", since = "1.0.0")]
-// #[doc(no_inline)] pub use slice::SliceConcatExt;
-// #[stable(feature = "rust1", since = "1.0.0")]
-// #[doc(no_inline)] pub use string::{String, ToString};
-// #[stable(feature = "rust1", since = "1.0.0")]
-// #[doc(no_inline)] pub use vec::Vec;
-
-// TODO: These are additions!
 #[stable(feature = "rust1", since = "1.0.0")]
-pub use core::slice::SliceExt;
+#[doc(no_inline)] pub use slice::SliceConcatExt;
 #[stable(feature = "rust1", since = "1.0.0")]
-pub use core::str::StrExt;
-#[stable(feature = "addition", since = "1.0.0")]
-pub use std_unicode::str::*;
+#[doc(no_inline)] pub use string::{String, ToString};
+#[stable(feature = "rust1", since = "1.0.0")]
+#[doc(no_inline)] pub use vec::Vec;
