@@ -13,7 +13,6 @@ lto = true
 debug = true
 
 [profile.test]
-panic = "abort"
 debug = true
 
 [profile.release]
