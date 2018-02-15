@@ -197,3 +197,96 @@ mod allocator {
         }
     });
 }
+
+mod linked_list {
+    use allocator::linked_list::LinkedList;
+
+    #[test]
+    fn example_1() {
+        let address_1 = (&mut (1 as usize)) as *mut usize;
+        let address_2 = (&mut (2 as usize)) as *mut usize;
+
+        let mut list = LinkedList::new();
+        unsafe {
+            list.push(address_1);
+            list.push(address_2);
+        }
+
+        assert_eq!(list.peek(), Some(address_2));
+        assert_eq!(list.pop(), Some(address_2));
+        assert_eq!(list.pop(), Some(address_1));
+        assert_eq!(list.pop(), None);
+    }
+
+    #[test]
+    fn example_2() {
+        let address_1 = (&mut (1 as usize)) as *mut usize;
+        let address_2 = (&mut (2 as usize)) as *mut usize;
+        let address_3 = (&mut (3 as usize)) as *mut usize;
+
+        let mut list = LinkedList::new();
+        unsafe {
+            list.push(address_1);
+            list.push(address_2);
+            list.push(address_3);
+        }
+
+        for node in list.iter_mut() {
+            if node.value() == address_2 {
+                node.pop();
+            }
+        }
+
+        assert_eq!(list.pop(), Some(address_3));
+        assert_eq!(list.pop(), Some(address_1));
+        assert_eq!(list.pop(), None);
+    }
+
+    #[test]
+    fn example_3() {
+        let address_1 = (&mut (1 as usize)) as *mut usize;
+        let address_2 = (&mut (2 as usize)) as *mut usize;
+        let address_3 = (&mut (3 as usize)) as *mut usize;
+
+        let mut list = LinkedList::new();
+        unsafe {
+            list.push(address_1);
+            list.push(address_2);
+            list.push(address_3);
+        }
+
+        for node in list.iter_mut() {
+            if node.value() == address_2 {
+                node.pop();
+            }
+        }
+
+        {
+            let mut iter = list.iter();
+            assert_eq!(iter.next(), Some(address_3));
+            assert_eq!(iter.next(), Some(address_1));
+            assert_eq!(iter.next(), None);
+        }
+
+        for node in list.iter_mut() {
+            if node.value() == address_1 {
+                node.pop();
+            }
+        }
+
+        {
+            let mut iter = list.iter();
+            assert_eq!(iter.next(), Some(address_3));
+            assert_eq!(iter.next(), None);
+        }
+
+        for node in list.iter_mut() {
+            if node.value() == address_3 {
+                node.pop();
+            }
+        }
+
+        let mut iter = list.iter();
+        assert_eq!(iter.next(), None);
+    }
+}
