@@ -26,6 +26,7 @@ all:
 	@echo "clean          clean products from all targets"
 
 test:
+	cd ../os/kernel && make test
 
 check:
 	@okay=true; \
