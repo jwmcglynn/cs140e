@@ -1,0 +1,3 @@
+LibC's malloc returns 8-byte alignment on 32-bit platforms and 16-byte alignment on 64-bit because each allocation block has to contain two items: one containing the size and the allocated memory.
+
+The minimum addressable size is 32-bits, which means that the minimum size for each allocation is 8- and 16-bytes for 32- and 64-bits respectively.

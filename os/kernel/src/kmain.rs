@@ -65,5 +65,11 @@ pub extern "C" fn kmain() {
 
     ALLOCATOR.initialize();
 
+    let mut v = vec![];
+    for i in 0..1000 {
+        v.push(i);
+    }
+    kprintln!("{:?}", v);
+
     shell::shell("> ");
 }

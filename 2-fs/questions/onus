@@ -1,0 +1,5 @@
+C chose the simplest possible implementation here because in C, there are no abstractions on top of the base API.  The caller has to store the resulting pointer, so handling both a pointer and layout would be cumbersome.
+
+Rust provides the ability to abstract details away from the user, so it is able to handle both items and abstract that detail from the caller.  This has the advantage of moving the code that implements this into a common location to avoid the same code being written by every allocator, thus making it easier to implement each allocator.
+
+Additionally, by doing this rust may be able to perform additional optimizations at the language level, like reusing memory without getting the allocator involved.

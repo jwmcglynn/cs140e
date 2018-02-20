@@ -1,0 +1,8 @@
+The backtrace would look like it is invoking alloc from within the push method, possibly with compiler-generated functions inserted in between:
+
+bump::Allocator::alloc(self, layout)
+__rust_alloc(size, alignment)
+core::Vec::expand(self, new_size)
+core::Vec::push(self, i)
+
+Vec needs to resize it's internal storage, so it should invoke some sort of rust facility (not the allocator) directly, which will determine which allocator to call and redirect the call appropriately.
