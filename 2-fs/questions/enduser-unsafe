@@ -1,0 +1,3 @@
+Unions don't perform any validation, and require the caller to use them correctly to make sure accesses are safe.  This is prone to error, so wrapping them and exposing them in a safe way reduces the unsafe surface area.
+
+In C, the closest thing is to expose an opaque pointer and provide accessor functions, but doing so has much more overhead than in rust.

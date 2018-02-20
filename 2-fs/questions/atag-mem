@@ -1,0 +1,5 @@
+ATAG_MEM reports 994050048 bytes of memory, or 948 MB.  This is 76 MB less than the Pi's reported 1 GB (1024 MB).
+
+According to the raspberry pi memory documentation, the pi allocates 64 MB by default to the GPU: https://www.raspberrypi.org/documentation/configuration/config-txt/memory.md
+
+So there's another 12 MB that's unexplained.

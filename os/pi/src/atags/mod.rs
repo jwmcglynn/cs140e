@@ -23,7 +23,17 @@ impl Atags {
 impl Iterator for Atags {
     type Item = Atag;
 
+    /// Iterate over Atags.  Returns a valid Atag until the iterator hits the
+    /// Atag::None.
     fn next(&mut self) -> Option<Atag> {
-        unimplemented!("atags iterator")
+        let cur = self.ptr;
+        match cur.next() {
+            Some(next) => {
+                let result = Some(Atag::from(cur));
+                self.ptr = next;
+                result
+            },
+            None => None,
+        }
     }
 }

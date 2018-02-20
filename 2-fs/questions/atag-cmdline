@@ -1,0 +1,15 @@
+The CMDLINE atag contains:
+
+bcm2708_fb.fbwidth=656 bcm2708_fb.fbheight=416 bcm2708_fb.fbswap=1 dma.dmachans=0x7f35 bcm2709.boardrev=0xa02082 bcm2709.serial=0x52f52d2 bcm2709.uart_clock=48000000 smsc95xx.macaddr=B8:27:EB:2F:52:D2 vc_mem.mem_base=0x3ec00000 vc_mem.mem_size=0x40000000  console=ttyS0,115200 kgdboc=ttyS0,115200 console=tty1 root=/dev/mmcblk0p2 rootfstype=ext4 rootwait
+
+This contains information about the raspberry pi's peripherals, things that may vary between different BCM2837 boards:
+- bcm2708_fb parameters seem to indicate the framebuffer properties.
+- dma channel count for direct-memory-access peripherals
+- Board revision.
+- UART, serial information.
+- Virtual memory base and size.
+- Console baud rate and name.
+- MMC device.
+- Filesystem.
+
+Some parameters seem to have linux-oriented naming, such as /dev/mmcblk0p2, which makes sense since the raspberry pi was original designed to run linux.  These parameters may be used so that linux only needs to implement generic support for BCM2837 and have it work with different board configurations.

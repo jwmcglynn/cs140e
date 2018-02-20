@@ -21,8 +21,10 @@ pub mod mutex;
 pub mod console;
 pub mod shell;
 
-use pi::timer::spin_sleep_ms;
+use pi::atags::Atags;
 use pi::gpio::Gpio;
+use pi::timer::spin_sleep_ms;
+use console::kprintln;
 
 #[cfg(not(test))]
 use allocator::Allocator;
@@ -34,8 +36,6 @@ pub static ALLOCATOR: Allocator = Allocator::uninitialized();
 #[no_mangle]
 #[cfg(not(test))]
 pub extern "C" fn kmain() {
-    ALLOCATOR.initialize();
-
     let mut loading_leds = [
         Gpio::new(5).into_output(),
         Gpio::new(6).into_output(),
@@ -54,6 +54,16 @@ pub extern "C" fn kmain() {
         led.clear();
         spin_sleep_ms(100);
     }
+
+    let mut atags: Atags = Atags::get();
+    loop {
+        match atags.next() {
+            Some(atag) => kprintln!("ATAG: {:#?}", atag),
+            None => break,
+        }
+    }
+
+    ALLOCATOR.initialize();
 
     shell::shell("> ");
 }
