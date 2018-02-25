@@ -5,8 +5,9 @@
 /// # Panics
 ///
 /// Panics if `align` is not a power of 2.
+#[allow(dead_code)]
 pub fn align_down(addr: usize, align: usize) -> usize {
-    assert!(is_power_of_two(align));
+    assert!(align.is_power_of_two());
     addr / align * align
 }
 
@@ -18,12 +19,8 @@ pub fn align_down(addr: usize, align: usize) -> usize {
 ///
 /// Panics if `align` is not a power of 2.
 pub fn align_up(addr: usize, align: usize) -> usize {
-    assert!(is_power_of_two(align));
+    assert!(align.is_power_of_two());
     (addr + align - 1) / align * align
-}
-
-fn is_power_of_two(num: usize) -> bool {
-    num != 0 && num & (num - 1) == 0
 }
 
 #[cfg(test)]

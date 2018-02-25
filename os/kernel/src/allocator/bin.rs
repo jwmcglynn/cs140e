@@ -1,19 +1,58 @@
 use std::fmt;
+use std::mem;
 use alloc::heap::{AllocErr, Layout};
 
 use allocator::util::*;
 use allocator::linked_list::LinkedList;
 
+const FIRST_BIN_SIZE: usize = 1 << 3;
+const USIZE_BITS: usize = mem::size_of::<usize>() * 8;
+
+fn previous_power_of_two(num: usize) -> usize {
+    if num < 2 {
+        0
+    } else {
+        1 << (USIZE_BITS - num.leading_zeros() as usize - 1)
+    }
+}
+
+fn bin_size(size: usize) -> usize {
+    if size < FIRST_BIN_SIZE {
+        FIRST_BIN_SIZE
+    } else {
+        size.next_power_of_two()
+    }
+}
+
+fn size_to_bin_number(size: usize) -> usize {
+    if size < FIRST_BIN_SIZE {
+        0
+    } else {
+        (bin_size(size).trailing_zeros() - FIRST_BIN_SIZE.trailing_zeros()) as usize
+    }
+}
+
+fn has_alignment(size: *mut usize, align: usize) -> bool {
+    (size as usize) % align == 0
+}
+
 /// A simple allocator that allocates based on size classes.
 pub struct Allocator {
-    // FIXME: Add the necessary fields.
+    bins: [LinkedList; 64],
+
+    max_bin_size: usize,
+    unallocated_current: usize,
+    unallocated_end: usize,
 }
 
 impl Allocator {
     /// Creates a new bin allocator that will allocate memory from the region
     /// starting at address `start` and ending at address `end`.
     pub fn new(start: usize, end: usize) -> Allocator {
-        unimplemented!("bin allocator")
+        let bins: [LinkedList; 64] = [LinkedList::new(); 64];
+
+        let max_bin_size = previous_power_of_two(end - start);
+        Allocator { bins, max_bin_size, unallocated_current: start, unallocated_end: end}
     }
 
     /// Allocates memory. Returns a pointer meeting the size and alignment
@@ -37,7 +76,27 @@ impl Allocator {
     /// (`AllocError::Exhausted`) or `layout` does not meet this allocator's
     /// size or alignment constraints (`AllocError::Unsupported`).
     pub fn alloc(&mut self, layout: Layout) -> Result<*mut u8, AllocErr> {
-        unimplemented!("bin allocation")
+        if layout.size() > self.max_bin_size {
+            return Err(AllocErr::Unsupported{ details: "Allocation too large." });
+        }
+
+        // Try to service the request from the bin's free list.
+        let ref mut bin = self.bins[size_to_bin_number(layout.size())];
+        for mut node in bin.iter_mut() {
+            if has_alignment(node.value(), layout.align()) {
+                return Ok(node.pop() as *mut u8);
+            }
+        }
+
+        let bin_size: usize = bin_size(layout.size());
+
+        let start = align_up(self.unallocated_current, layout.align());
+        if self.unallocated_end.saturating_sub(bin_size) < start {
+            Err(AllocErr::Exhausted{ request: layout })
+        } else {
+            self.unallocated_current = start + bin_size;
+            Ok(start as *mut u8)
+        }
     }
 
     /// Deallocates the memory referenced by `ptr`.
@@ -54,6 +113,42 @@ impl Allocator {
     /// Parameters not meeting these conditions may result in undefined
     /// behavior.
     pub fn dealloc(&mut self, ptr: *mut u8, layout: Layout) {
-        unimplemented!("bin deallocation")
+        unsafe {
+            self.bins[size_to_bin_number(layout.size())].push(ptr as *mut usize);
+        }
+    }
+}
+
+impl fmt::Debug for Allocator {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        writeln!(f, "Allocator {{")?;
+        writeln!(f, "  max_bin_size: {}", self.max_bin_size)?;
+        writeln!(f, "  unallocated_current: {}", self.unallocated_current)?;
+        writeln!(f, "  unallocated_end: {}", self.unallocated_end)?;
+
+        let mut bin_size = FIRST_BIN_SIZE;
+        for i in 0..size_to_bin_number(self.max_bin_size) {
+            writeln!(f, "  bin#{} size={} = {:#?}", i, bin_size, self.bins[i])?;
+            bin_size = bin_size * 2;
+        }
+
+        Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_previous_power_of_two() {
+        assert_eq!(previous_power_of_two(0), 0);
+        assert_eq!(previous_power_of_two(1), 0);
+        assert_eq!(previous_power_of_two(5), 4);
+        assert_eq!(previous_power_of_two(4), 4);
+        assert_eq!(previous_power_of_two(96), 64);
+        assert_eq!(previous_power_of_two(1 << 32), 1 << 32);
+        assert_eq!(previous_power_of_two(1 << 14), 1 << 14);
+        assert_eq!(previous_power_of_two((1 << 30 - 1)), 1 << 29);
     }
 }

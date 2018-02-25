@@ -1,0 +1,9 @@
+My bin allocator uses power-of-two size bins, of size 2^3 (8 bytes) all the way up to the maximum size that will fit within the memory space.  Powers of two were chosen to make mapping sizes to bins as simple as possible and to make it more likely for blocks to be aligned.
+
+When allocating memory, the routine finds the bin that is large enough for the given memory request, and then searches all blocks in the bin for one with the requested alignment requirements.  If that is not possible, a new block of memory is reserved using a bump-allocator like strategy and given the requested alignment.
+
+When memory is deallocated, it is returned to the bin.  So memory is essentially reused with the bins representing a free list with a given size.
+
+Each block is created with a given alignment, and can't be changed after it is allocated, which is the simplest approach without having external storage to keep track of allocations.
+
+The allocator can have up to layout.align() bytes of internal fragmentation, which could be 8 bytes per allocation given the standard alignment is 8 bytes.  External fragmentation is much higher, up to 50% of available memory if all of the bytes are 1-byte more than a power of two.

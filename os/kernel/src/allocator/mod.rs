@@ -1,12 +1,11 @@
 mod linked_list;
 mod util;
 
-#[path = "bump.rs"]
+#[path = "bin.rs"]
 mod imp;
 
 use mutex::Mutex;
 use alloc::heap::{Alloc, AllocErr, Layout};
-use std::cmp::max;
 use pi::atags::Atags;
 
 /// Thread-safe (locking) wrapper around a particular memory allocator.

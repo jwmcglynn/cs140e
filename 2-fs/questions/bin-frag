@@ -1,0 +1,13 @@
+One approach to reduce fragmentation is to allow sub-dividing allocations.  For a 512-byte bin if there is a 300 byte allocation, there is still a power-of-two-sized 128 bytes of space at the end of the allocation that can be reused for future allocations.
+
+The current implementation doesn't handle alignment well, so if a block gets allocated with an uncommon alignment, it may not be reused for a long time.  So if that can be reduced, it implicitly reduces the amount of unused memory.  However, with just the pointer and original allocation layout, there is currently no way to derive the original pointer of the allocation to add it back to the bin.  To add additional data to make this possible, use the first four bytes before the current allocation to store the offset to the beginning of the allocation, like so:
+
+    [ padding      | 4 bytes | ----- rest of allocation ---- ]
+    ^                ^       ^
+    |                |       |
+    allocation       offset  pointer returned
+    start
+
+When the data is returned, access the u32 before the pointer to determine which pointer to return to the bin.
+
+When allocating, then it's possible to use any allocation as long as the bin is large enough to fit the padding required to meet the given alignment.

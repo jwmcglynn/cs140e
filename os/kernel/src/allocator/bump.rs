@@ -43,7 +43,7 @@ impl Allocator {
             Err(AllocErr::Exhausted{ request: layout })
         } else {
             self.current = start + layout.size();
-            Ok(unsafe { start as *mut u8 })
+            Ok(start as *mut u8)
         }
     }
 
