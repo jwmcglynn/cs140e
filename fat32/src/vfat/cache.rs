@@ -50,7 +50,8 @@ impl CachedDevice {
     }
 }
 
-// FIXME: Implement `BlockDevice` for `CacheDevice`.
+// FIXME: Implement `BlockDevice` for `CacheDevice`. The `read_sector` and
+// `write_sector` methods should only read/write from/to cached sectors.
 
 impl fmt::Debug for CachedDevice {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
