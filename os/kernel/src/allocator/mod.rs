@@ -8,6 +8,11 @@ use mutex::Mutex;
 use alloc::heap::{Alloc, AllocErr, Layout};
 use pi::atags::Atags;
 
+/// Used to print allocator stats to the console.
+pub trait AllocStats {
+    fn print_stats(&self);
+}
+
 /// Thread-safe (locking) wrapper around a particular memory allocator.
 #[derive(Debug)]
 pub struct Allocator(Mutex<Option<imp::Allocator>>);
@@ -72,6 +77,14 @@ unsafe impl<'a> Alloc for &'a Allocator {
     /// behavior.
     unsafe fn dealloc(&mut self, ptr: *mut u8, layout: Layout) {
         self.0.lock().as_mut().expect("allocator uninitialized").dealloc(ptr, layout);
+    }
+}
+
+impl AllocStats for Allocator {
+    fn print_stats(&self) {
+        if let Some(ref mut alloc) = self.0.lock().as_mut() {
+            alloc.print_stats();
+        }
     }
 }
 

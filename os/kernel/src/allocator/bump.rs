@@ -63,3 +63,9 @@ impl Allocator {
     pub fn dealloc(&mut self, _ptr: *mut u8, _layout: Layout) {
     }
 }
+
+impl AllocStats for Allocator {
+    fn print_stats(&self) {
+        kprintln!("Memory Available: {} bytes", self.end - self.current);
+    }
+}

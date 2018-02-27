@@ -3,6 +3,11 @@ use console::{kprint, kprintln, CONSOLE};
 use std::str;
 use std::io::Write;
 
+#[cfg(not(test))]
+use ALLOCATOR;
+#[cfg(not(test))]
+use allocator::AllocStats;
+
 /// Error type for `Command` parse failures.
 #[derive(Debug)]
 enum Error {
@@ -44,6 +49,7 @@ impl<'a> Command<'a> {
     fn execute(&self) {
         match self.path() {
             "echo" => handle_echo(&self.args[1..]),
+            "memstat" => handle_memstat(&self.args[1..]),
             path => kprintln!("Unknown command: {}", path)
         }
     }
@@ -59,6 +65,23 @@ fn handle_echo(args: &[&str]) {
 
         kprintln!("{}", args[len - 1]);
     }
+}
+
+#[cfg(not(test))]
+fn handle_memstat(args: &[&str]) {
+    if args.len() > 0 {
+        kprintln!("Too many args. Usage:");
+        kprintln!("memstat");
+        kprintln!();
+        return;
+    }
+
+    ALLOCATOR.print_stats();
+}
+
+#[cfg(test)]
+fn handle_memstat(_args: &[&str]) {
+    // No-op for test.
 }
 
 const BELL: u8 = 7;

@@ -6,4 +6,10 @@ BAUD=115200
 
 cd $BASEDIR
 make install
-screen $TTYPATH $BAUD
+RESULT=$?
+if [ $RESULT -eq 0 ]; then
+    screen $TTYPATH $BAUD
+else
+    echo "Build failed"
+    exit $RESULT
+fi
