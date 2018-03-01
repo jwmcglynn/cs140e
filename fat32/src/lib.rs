@@ -7,10 +7,9 @@ compile_error!("only little endian platforms supported");
 #[cfg(test)]
 mod tests;
 mod mbr;
-mod traits;
 mod util;
 
 pub mod vfat;
+pub mod traits;
 
 pub use mbr::*;
-pub use traits::*;
