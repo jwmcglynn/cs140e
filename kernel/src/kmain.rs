@@ -14,19 +14,24 @@
 extern crate alloc;
 extern crate pi;
 extern crate stack_vec;
+extern crate fat32;
 
 pub mod allocator;
 pub mod lang_items;
 pub mod mutex;
 pub mod console;
 pub mod shell;
+pub mod fs;
 
 #[cfg(not(test))]
 use allocator::Allocator;
+use fs::FileSystem;
 
 #[cfg(not(test))]
 #[global_allocator]
 pub static ALLOCATOR: Allocator = Allocator::uninitialized();
+
+pub static FILE_SYSTEM: FileSystem = FileSystem::uninitialized();
 
 #[no_mangle]
 #[cfg(not(test))]
