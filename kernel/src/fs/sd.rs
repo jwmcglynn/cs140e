@@ -1,7 +1,7 @@
 use std::io;
 use fat32::traits::BlockDevice;
 
-extern {
+extern "C" {
     /// A global representing the last SD controller error that occured.
     static sd_err: i64;
 
