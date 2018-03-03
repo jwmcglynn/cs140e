@@ -5,9 +5,11 @@ SUBMISSION_SITE := $(BASE_URL)/assignments/submission/
 SUBMIT_TAR := $(ASSIGNMENT_NAME).tar.gz
 
 FILES_DIR := files
+RESOURCES_DIR := $(FILES_DIR)/resources
+RESOURCES_TAR := $(RESOURCES_DIR).tar.gz
 FIRMWARE_DIR := $(FILES_DIR)/firmware
 FIRMWARE_TAR := $(FIRMWARE_DIR).tar.gz
-ASSIGNMENT_FILES := $(FIRMWARE_TAR)
+ASSIGNMENT_FILES := $(FIRMWARE_TAR) $(RESOURCES_TAR)
 
 CS140E_REL_ROOT := ..
 REPO_NAMES := 0-blinky 1-shell 2-fs os
@@ -27,6 +29,7 @@ all:
 
 test:
 	cd ../os/kernel && make test
+	cd fat32 && cargo test
 
 check:
 	@okay=true; \
@@ -49,7 +52,7 @@ submission: $(SUBMIT_TAR)
 	@echo "Your submission file "$^" was successfully created."
 	@echo "Submit it at $(SUBMISSION_SITE)"
 
-fetch: $(FIRMWARE_DIR) $(ASSIGNMENT_FILES)
+fetch: $(FIRMWARE_DIR) $(RESOURCES_DIR) $(ASSIGNMENT_FILES)
 
 .FORCE:
 $(SUBMIT_TAR): .FORCE
@@ -81,8 +84,13 @@ $(ASSIGNMENT_FILES): | $(FILES_DIR)
 
 $(FIRMWARE_DIR): $(FIRMWARE_TAR) | $(FILES_DIR)
 	tar -xzvf $^ -C $(FILES_DIR)
-	@touch $(FIRMWARE_DIR)
+	@touch $@
+
+$(RESOURCES_DIR): $(RESOURCES_TAR) | $(FILES_DIR)
+	tar -xzvf $^ -C $(FILES_DIR)
+	@touch $@
 
 clean:
 	rm -rf $(FILES_DIR)
 	rm -f $(SUBMIT_TAR)
+	cd fat32 && cargo clean
