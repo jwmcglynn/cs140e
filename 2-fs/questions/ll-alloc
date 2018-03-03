@@ -1,0 +1,1 @@
+If we used a regular linked list, we'd have to allocate memory to push an item, so we wouldn't be able to allocate memory without allocating more memory, which creates a circular dependency.
