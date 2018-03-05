@@ -57,5 +57,5 @@ impl Allocator {
         unimplemented!("bin deallocation")
     }
 }
-//
+
 // FIXME: Implement `Debug` for `Allocator`.
