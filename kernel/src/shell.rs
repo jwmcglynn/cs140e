@@ -41,7 +41,7 @@ impl<'a> Command<'a> {
 }
 
 /// Starts a shell using `prefix` as the prefix for each line. This function
-/// never returns: it is perpetually in a shell loop.
-pub fn shell(prefix: &str) -> ! {
+/// returns if the `exit` command is called.
+pub fn shell(prefix: &str) {
     unimplemented!()
 }

@@ -1,4 +1,5 @@
-use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicUsize};
+use std::sync::atomic::Ordering::Relaxed;
 use std::cell::UnsafeCell;
 use std::ops::{DerefMut, Deref, Drop};
 use std::fmt;
@@ -7,6 +8,7 @@ use std::fmt;
 pub struct Mutex<T> {
     data: UnsafeCell<T>,
     lock: AtomicBool,
+    owner: AtomicUsize
 }
 
 unsafe impl<T: Send> Send for Mutex<T> { }
@@ -23,6 +25,7 @@ impl<T> Mutex<T> {
     pub const fn new(val: T) -> Mutex<T> {
         Mutex {
             lock: AtomicBool::new(false),
+            owner: AtomicUsize::new(usize::max_value()),
             data: UnsafeCell::new(val)
         }
     }
@@ -32,8 +35,10 @@ impl<T> Mutex<T> {
     // Once MMU/cache is enabled, do the right thing here. For now, we don't
     // need any real synchronization.
     pub fn try_lock(&self) -> Option<MutexGuard<T>> {
-        if !self.lock.load(Ordering::Relaxed) {
-            self.lock.store(true, Ordering::Relaxed);
+        let this = 0;
+        if !self.lock.load(Relaxed) || self.owner.load(Relaxed) == this {
+            self.lock.store(true, Relaxed);
+            self.owner.store(this, Relaxed);
             Some(MutexGuard { lock: &self })
         } else {
             None
@@ -54,7 +59,7 @@ impl<T> Mutex<T> {
     }
 
     fn unlock(&self) {
-        self.lock.store(false, Ordering::Relaxed);
+        self.lock.store(false, Relaxed);
     }
 }
 

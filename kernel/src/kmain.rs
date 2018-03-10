@@ -7,6 +7,11 @@
 #![feature(repr_align)]
 #![feature(attr_literals)]
 #![feature(exclusive_range_pattern)]
+#![feature(i128_type)]
+#![feature(never_type)]
+#![feature(unique)]
+#![feature(pointer_methods)]
+#![feature(naked_functions)]
 #![feature(alloc, allocator_api, global_allocator)]
 
 #[macro_use]
@@ -22,6 +27,8 @@ pub mod mutex;
 pub mod console;
 pub mod shell;
 pub mod fs;
+pub mod traps;
+pub mod aarch64;
 
 #[cfg(not(test))]
 use allocator::Allocator;
@@ -38,3 +45,4 @@ pub static FILE_SYSTEM: FileSystem = FileSystem::uninitialized();
 pub extern "C" fn kmain() {
     ALLOCATOR.initialize();
 }
+
