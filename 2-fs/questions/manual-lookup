@@ -1,0 +1,11 @@
+Starting with the EBPB, get the cluster number of the root directory and start looking in the FAT table at that index.
+
+Calculate the starting point of the FAT with number of reserved sectors * number of bytes per sector, and the starting point of the data section by adding number of fats * sectors per fat * bytes per sector to that.
+
+In the FAT table, read the FAT ID, end-of-cluster-chain marker, and then the ID of the first data cluster assuming it isn't the end-of-cluster-chain marker.
+
+Then, use the data cluster ID and lookup in the data section to find the LFN or regular directory entry.  If it is a LFN, scan over the entries and build up the filename until reaching the directory entry. If it's a directory entry, determine if the name is "a", if not continue to the next data cluster in the FAT table.
+
+If the directory is "a", use the cluster id to determine the start of the subdirectory, and scan it in a similar way looking for subdirectory "b".
+
+Then, after finding the cluster for "b", scan it for a file with name "c.txt" and get the cluster id of that.

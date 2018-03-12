@@ -1,0 +1,1 @@
+The first sector is an MBR if the 511th and 512th byte are 0x55 and 0xAA respectively.  For GPT-partitioned disks they are zeroed out.

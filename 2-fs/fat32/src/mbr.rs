@@ -24,7 +24,7 @@ pub struct MasterBootRecord {
 pub enum Error {
     /// There was an I/O error while reading the MBR.
     Io(io::Error),
-    /// Partiion `.0` (0-indexed) contains an invalid or unknown boot indicator.
+    /// Partition `.0` (0-indexed) contains an invalid or unknown boot indicator.
     UnknownBootIndicator(u8),
     /// The MBR magic signature was invalid.
     BadSignature,
