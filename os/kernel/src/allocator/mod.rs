@@ -4,6 +4,9 @@ mod util;
 #[path = "bin.rs"]
 mod imp;
 
+#[cfg(test)]
+mod tests;
+
 use mutex::Mutex;
 use alloc::heap::{Alloc, AllocErr, Layout};
 use pi::atags::Atags;
@@ -93,7 +96,9 @@ extern "C" {
 }
 
 /// Returns the (start address, end address) of the available memory on this
-/// system.
+/// system if it can be determined. If it cannot, `None` is returned.
+///
+/// This function is expected to return `Some` under all normal cirumstances.
 fn memory_map() -> Option<(usize, usize)> {
     let binary_end = unsafe { (&_end as *const u8) as u32 };
 

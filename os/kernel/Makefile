@@ -16,7 +16,10 @@ RUST_BUILD_DIR := target/$(TARGET)
 RUST_DEBUG_LIB := $(RUST_BUILD_DIR)/debug/lib$(RUST_BINARY).a
 RUST_RELEASE_LIB := $(RUST_BUILD_DIR)/release/lib$(RUST_BINARY).a
 
-RUST_LIB_DEPS = ../pi/src/* ../pi/src/*/**
+RUST_LIB_DEPS = ../pi/src/* ../pi/src/*/** \
+				../../1-shell/stack-vec/src/* \
+				../../2-fs/fat32/src/* ../../2-fs/fat32/src/*/**
+
 RUST_DEPS = Xargo.toml Cargo.toml build.rs $(LD_LAYOUT) src/* $(RUST_LIB_DEPS)
 EXT_DEPS = $(BUILD_DIR)/init.o
 

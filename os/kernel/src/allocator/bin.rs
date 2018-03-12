@@ -206,3 +206,5 @@ mod tests {
         assert_eq!(previous_power_of_two((1 << 30 - 1)), 1 << 29);
     }
 }
+//
+// FIXME: Implement `Debug` for `Allocator`.

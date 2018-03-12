@@ -14,11 +14,48 @@ use std::{fmt, ptr};
 /// using `push()`. The first address in the list, if any, can be removed and
 /// returned using `pop()` or returned (but not removed) using `peek()`.
 ///
+/// ```rust
+/// # let address_1 = (&mut (1 as usize)) as *mut usize;
+/// # let address_2 = (&mut (2 as usize)) as *mut usize;
+/// let mut list = LinkedList::new();
+/// unsafe {
+///     list.push(address_1);
+///     list.push(address_2);
+/// }
+///
+/// assert_eq!(list.peek(), Some(address_2));
+/// assert_eq!(list.pop(), Some(address_2));
+/// assert_eq!(list.pop(), Some(address_1));
+/// assert_eq!(list.pop(), None);
+/// ```
+///
 /// `LinkedList` exposes two iterators. The first, obtained via `iter()`,
 /// iterates over all of the addresses in the list. The second, returned from
 /// `iter_mut()`, returns `Node`s that refer to each address in the list. The
 /// `value()` and `pop()` methods of `Node` can be used to read the value or pop
 /// the value from the list, respectively.
+///
+/// ```rust
+/// # let address_1 = (&mut (1 as usize)) as *mut usize;
+/// # let address_2 = (&mut (2 as usize)) as *mut usize;
+/// # let address_3 = (&mut (3 as usize)) as *mut usize;
+/// let mut list = LinkedList::new();
+/// unsafe {
+///     list.push(address_1);
+///     list.push(address_2);
+///     list.push(address_3);
+/// }
+///
+/// for node in list.iter_mut() {
+///     if node.value() == address_2 {
+///         node.pop();
+///     }
+/// }
+///
+/// assert_eq!(list.pop(), Some(address_3));
+/// assert_eq!(list.pop(), Some(address_1));
+/// assert_eq!(list.pop(), None);
+/// ```
 #[derive(Copy, Clone)]
 pub struct LinkedList {
     head: *mut usize,
@@ -41,9 +78,11 @@ impl LinkedList {
     ///
     /// # Safety
     ///
-    /// The caller must ensure that `item` refers to valid, unique, writeable
-    /// memory at least `usize` in size. Barring the uniqueness constraint, this
-    /// is equivalent to ensuring that `*item = some_usize` is a safe operation.
+    /// The caller must ensure that `item` refers to unique, writeable memory at
+    /// least `usize` in size that is valid as long as `item` resides in `self`.
+    /// Barring the uniqueness constraint, this is equivalent to ensuring that
+    /// `*item = some_usize` is a safe operation as long as the pointer resides
+    /// in `self`.
     pub unsafe fn push(&mut self, item: *mut usize) {
         *item = self.head as usize;
         self.head = item;
