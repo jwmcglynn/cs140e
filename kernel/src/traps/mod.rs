@@ -35,6 +35,10 @@ pub struct Info {
     kind: Kind,
 }
 
+/// This function is called when an exception occurs. The `info` parameter
+/// specifies the source and kind of exception that has occurred. The `esr` is
+/// the value of the exception syndrome register. Finally, `tf` is a pointer to
+/// the trap frame for the exception.
 #[no_mangle]
 pub extern fn handle_exception(info: Info, esr: u32, tf: &mut TrapFrame) {
     unimplemented!("handle_exception")

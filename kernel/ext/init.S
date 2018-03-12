@@ -43,9 +43,9 @@ switch_to_el2:
     eret
 
 switch_to_el1:
-    // switch to EL1 if we're in EL2. otherwise continue with start
-    cmp     x0, EL2
-    bne     set_stack
+    // switch to EL1 if we're not already in EL1. otherwise continue with start
+    cmp     x0, EL1
+    beq     set_stack
 
     // set the stack-pointer for EL1
     msr     SP_EL1, x1
