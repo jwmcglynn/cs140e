@@ -20,7 +20,6 @@ pub unsafe fn current_el() -> u8 {
     ((el_reg & 0b1100) >> 2) as u8
 }
 
-
 /// Returns the SPSel value.
 #[inline(always)]
 pub fn sp_sel() -> u8 {

@@ -1,6 +1,7 @@
 mod irq;
 mod trap_frame;
 mod syndrome;
+mod syscall;
 
 use pi::interrupt::{Controller, Interrupt};
 
@@ -9,6 +10,7 @@ pub use self::trap_frame::TrapFrame;
 use console::kprintln;
 use self::syndrome::Syndrome;
 use self::irq::handle_irq;
+use self::syscall::handle_syscall;
 
 #[repr(u16)]
 #[derive(Debug, PartialEq, Eq, Copy, Clone)]
