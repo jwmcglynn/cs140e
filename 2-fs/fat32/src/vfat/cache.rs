@@ -10,6 +10,7 @@ struct CacheEntry {
     dirty: bool
 }
 
+#[derive(Debug)]
 pub struct Partition {
     /// The physical sector where the partition begins.
     pub start: u64,
@@ -148,6 +149,7 @@ impl fmt::Debug for CachedDevice {
         f.debug_struct("CachedDevice")
             .field("device", &"<block device>")
             .field("cache", &self.cache)
+            .field("partition", &self.partition)
             .finish()
     }
 }

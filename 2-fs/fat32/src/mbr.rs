@@ -51,7 +51,7 @@ impl BootIndicator {
 
 impl fmt::Debug for BootIndicator {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "BootIndicator({} ({})", match self.0 {
+        write!(f, "BootIndicator({} ({}))", match self.0 {
             BootIndicator::NO => "NO",
             BootIndicator::ACTIVE => "ACTIVE",
             _ => "Unknown",
@@ -59,22 +59,28 @@ impl fmt::Debug for BootIndicator {
     }
 }
 
-#[repr(u8)]
+#[repr(C)]
 #[derive(Copy, Clone, Debug)]
-pub enum PartitionType {
-    Fat32 = 0x0B,
-    Fat32Alt = 0x0C,
+pub struct PartitionType(u8);
+
+impl PartitionType {
+    const FAT32: u8 = 0x0B;
+    const FAT32_ALT: u8 = 0x0C;
+
+    pub fn is_fat(self) -> bool {
+        self.0 == PartitionType::FAT32 || self.0 == PartitionType::FAT32_ALT
+    }
 }
 
 #[repr(C, packed)]
 #[derive(Clone, Debug)]
 pub struct PartitionEntry {
-    boot_indicator: BootIndicator,
+    pub boot_indicator: BootIndicator,
     starting_chs: CHS,
-    partition_type: u8,
+    pub partition_type: PartitionType,
     ending_chs: CHS,
-    relative_sector: u32,
-    total_sectors: u32,
+    pub relative_sector: u32,
+    pub total_sectors: u32,
 }
 
 /// The master boot record (MBR).
@@ -136,6 +142,10 @@ impl MasterBootRecord {
         }
 
         Ok(mbr)
+    }
+
+    pub fn partition_at(&self, index: usize) -> &PartitionEntry {
+        &self.partition_table[index]
     }
 }
 

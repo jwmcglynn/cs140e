@@ -69,6 +69,7 @@ impl BiosParameterBlock {
         Ok(ebpb)
     }
 
+    /// The number of logical sectors for the partition.
     pub fn logical_sectors(&self) -> u32 {
         if self.logical_sectors_16 != 0 {
             self.logical_sectors_16 as u32
@@ -76,6 +77,40 @@ impl BiosParameterBlock {
             self.logical_sectors_32
         }
     }
+
+    /// Number of bytes per logical sector.
+    pub fn bytes_per_sector(&self) -> u16 {
+        self.bytes_per_sector
+    }
+
+    /// Sectors per FAT.
+    pub fn sectors_per_fat(&self) -> u32 {
+        self.sectors_per_fat_32
+    }
+
+    /// Sectors per cluster.
+    pub fn sectors_per_cluster(&self) -> u8 {
+        self.sectors_per_cluster
+    }
+
+    /// The sector offset, from the start of the partition, to the first fat
+    /// sector.
+    pub fn fat_start_sector(&self) -> u64 {
+        self.reserved_sectors as u64
+    }
+
+    /// The sector offset, from the start of the partition, to the first data
+    /// sector.
+    pub fn data_start_sector(&self) -> u64 {
+        self.fat_start_sector()
+            + self.sectors_per_fat_32 as u64 * self.fat_count as u64
+    }
+
+    /// Root dir cluster.
+    pub fn root_cluster(&self) -> u32 {
+        self.root_cluster
+    }
+
 }
 
 impl fmt::Debug for BiosParameterBlock {
