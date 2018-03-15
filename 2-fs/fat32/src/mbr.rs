@@ -176,7 +176,7 @@ mod tests {
         // Signature.
         data[510] = 0x55;
         data[511] = 0xAA;
-        let result = MasterBootRecord::from(
+         MasterBootRecord::from(
             Cursor::new(&mut data[..])).expect("Valid block");
     }
 

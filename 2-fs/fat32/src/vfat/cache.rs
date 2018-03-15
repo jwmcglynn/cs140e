@@ -247,9 +247,11 @@ mod tests {
     fn test_partiton_error() {
         static mut TEST_DATA: [u8; 512] = [0u8; 512];
 
-        let mut cache = unsafe { CachedDevice::new(
-            Cursor::new(&mut TEST_DATA[..]),
-            Partition { start: 2, sector_size: 256 }) };
+        unsafe {
+            CachedDevice::new(
+                Cursor::new(&mut TEST_DATA[..]),
+                Partition { start: 2, sector_size: 256 });
+        }
     }
 
     #[test]

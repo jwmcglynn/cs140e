@@ -159,7 +159,7 @@ mod tests {
         let mut data = [0u8; 512];
         data[510] = 0x55;
         data[511] = 0xAA;
-        let result = BiosParameterBlock::from(
+        BiosParameterBlock::from(
             Cursor::new(&mut data[..]), 0).expect("Valid block");
     }
 
