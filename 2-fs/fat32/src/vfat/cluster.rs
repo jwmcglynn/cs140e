@@ -9,4 +9,9 @@ impl From<u32> for Cluster {
     }
 }
 
-// TODO: Implement any useful helper methods on `Cluster`.
+impl Cluster {
+    /// Get the cluster index represented by this cluster.
+    pub fn index(&self) -> u32 {
+        self.0
+    }
+}
