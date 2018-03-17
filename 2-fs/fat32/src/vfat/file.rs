@@ -1,31 +1,23 @@
 use std::io::{self, SeekFrom};
 
 use traits;
-use vfat::{VFat, Shared, Cluster, Metadata};
+use vfat::{VFat, Shared, Cluster};
 
 #[derive(Debug)]
 pub struct File {
     start: Cluster,
     vfat: Shared<VFat>,
-    name: String,
-    metadata: Metadata,
     size: u32,
 
     pointer: u64,
 }
 
 impl File {
-    // Create a new file, called by Dir.
-    pub fn new(start: Cluster, vfat: Shared<VFat>, name: String,
-               metadata: Metadata, size: u32)
+    // Create a new file.
+    pub fn new(start: Cluster, vfat: Shared<VFat>, size: u32)
         -> File
     {
-        File { start, vfat, name, metadata, size, pointer: 0 }
-    }
-
-    /// Returns the file name.
-    pub fn name(&self) -> &String {
-        &self.name
+        File { start, vfat, size, pointer: 0 }
     }
 }
 

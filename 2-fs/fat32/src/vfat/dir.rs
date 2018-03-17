@@ -12,8 +12,6 @@ use vfat::{Metadata, Attributes, Timestamp, Time, Date};
 pub struct Dir {
     start: Cluster,
     vfat: Shared<VFat>,
-
-    name: String,
 }
 
 #[repr(C, packed)]
@@ -163,25 +161,14 @@ impl Dir {
     /// If `name` contains invalid UTF-8 characters, an error of `InvalidInput`
     /// is returned.
     pub fn find<P: AsRef<OsStr>>(&self, name: P) -> io::Result<Entry> {
-        use traits::Dir;
+        use traits::{Dir, Entry};
 
         let name_str = name.as_ref().to_str().ok_or(
             io::Error::new(io::ErrorKind::InvalidInput, "Invalid UTF-8"))?;
 
         self.entries()?.find(|item| {
-            match item {
-                &Entry::File(ref file) => file.name().eq_ignore_ascii_case(
-                    name_str),
-                &Entry::Dir(ref dir) => dir.name().eq_ignore_ascii_case(
-                    name_str),
-            }
+            item.name().eq_ignore_ascii_case(name_str)
         }).ok_or(io::Error::new(io::ErrorKind::NotFound, "Not found"))
-    }
-
-    /// Returns the directory name, or an empty string if this is the root
-    /// directory.
-    pub fn name(&self) -> &String {
-        &self.name
     }
 }
 
@@ -207,20 +194,20 @@ impl DirIterator {
             DirIterator::lfn_to_string(lfn)
         };
 
+        let metadata = Metadata::new(
+            entry.attributes, entry.created,
+            Timestamp { date: entry.accessed, time: Time::default() },
+            entry.modified);
+
         if entry.is_dir() {
-            Entry::Dir(Dir {
+            Entry::new_dir(name, metadata, Dir {
                 start: entry.cluster(),
-                vfat: self.vfat.clone(),
-                name
+                vfat: self.vfat.clone()
             })
         } else {
-            let metadata = Metadata::new(
-                entry.attributes, entry.created,
-                Timestamp { date: entry.accessed, time: Time::default() },
-                entry.modified);
-
-            Entry::File(File::new(entry.cluster(), self.vfat.clone(), name,
-                                  metadata, entry.file_size))
+            Entry::new_file(name, metadata,
+                            File::new(entry.cluster(), self.vfat.clone(),
+                                      entry.file_size))
         }
     }
 }
