@@ -1,0 +1,1 @@
+When calling Rust code, the rust compiler assumes that the same rust compiler safety is enforced at compile time.  For foreign code, theres no guarantee-- the code may immediately crash, it may access any memory address, or execute any assembly instructions it wants.  This is unsafe since rust can't enforce it.

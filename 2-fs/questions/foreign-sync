@@ -1,0 +1,1 @@
+To create an Sd object, sd_init has to succeed, which means that there can only be on Sd object at a time.  Rust only allows one thread to access an object at a time, so the Sd object and access to sd_err are inherently safe.

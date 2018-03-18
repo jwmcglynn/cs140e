@@ -1,0 +1,3 @@
+Rust mangles symbols to prevent collisions between functions in different files or modules.  In C, function names are global, no two functions can exist with the same name in the same application.  Rust keeps everything isolated, so it has to disambiguate between functions in the current file and module, and it does this by mangling the names.
+
+If rust didn't mangle, two modules could declare a foo() function and it would generate a linker error.
