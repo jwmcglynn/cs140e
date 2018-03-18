@@ -1,8 +1,6 @@
 use std::io;
 use std::io::Write;
 use std::path::Path;
-use std::mem::size_of;
-use std::cmp::min;
 
 use util::SliceExt;
 use mbr::MasterBootRecord;
@@ -59,54 +57,92 @@ impl VFat {
                         mut buf: &mut [u8])
         -> io::Result<usize>
     {
-        let sector_index = offset as u64 / self.bytes_per_sector as u64;
-        let cluster_start = self.fat_start_sector
-                            + cluster.index() as u64
-                                * self.sectors_per_cluster as u64;
-        let byte_offset = offset as usize
-                                - sector_index as usize
-                                    * self.bytes_per_sector as usize;
+        let cluster_start_sector = self.data_start_sector
+                                        + cluster.data_index() as u64
+                                            * self.sectors_per_cluster as u64;
+        let mut bytes_read: usize = 0;
+        loop {
+            let sector_index = (offset + bytes_read) as u64
+                                / self.bytes_per_sector as u64;
 
-        let data = self.device.get(cluster_start + sector_index)?;
-        if byte_offset > data.len() {
-            Err(io::Error::new(io::ErrorKind::UnexpectedEof, "Invalid offset"))
-        } else {
-            buf.write(&data[byte_offset..])
+            if sector_index >= self.sectors_per_cluster as u64 {
+                break;
+            } else {
+                let byte_offset = (offset + bytes_read) as usize
+                                    - sector_index as usize
+                                        * self.bytes_per_sector as usize;
+                let data = self.device.get(cluster_start_sector
+                                            + sector_index)?;
+                assert!(byte_offset < data.len());
+
+                let bytes = buf.write(&data[byte_offset..])?;
+                bytes_read += bytes;
+
+                if buf.is_empty() {
+                    break;
+                }
+            }
         }
+
+        Ok(bytes_read)
     }
 
     fn append_cluster_data(&mut self, cluster: Cluster, vec: &mut Vec<u8>)
         -> io::Result<usize>
     {
-        let mut offset = 0;
+        // To avoid extra copies, resize the vector to hold enough data for
+        // the read.
+        let cluster_size = self.bytes_per_sector as usize
+                            * self.sectors_per_cluster as usize;
+        vec.reserve(cluster_size);
+        let len_before = vec.len();
 
-        loop {
-            // To avoid extra copies, resize the vector to hold enough data for
-            // the read.
-            vec.reserve(self.bytes_per_sector as usize);
-            let len_before = vec.len();
-            let len = len_before + self.bytes_per_sector as usize;
+        unsafe {
+            vec.set_len(len_before + cluster_size);
+        }
 
-            unsafe {
-                vec.set_len(len);
-            }
+        let bytes_read = self.read_cluster(
+            cluster, 0, &mut vec[len_before..])?;
 
-            let bytes_read = self.read_cluster(
-                cluster, offset, &mut vec[len_before..len])?;
+        // Set the vector back to its actual size.
+        unsafe {
+            vec.set_len(len_before + bytes_read);
+        }
 
-            // Set the vector back to its actual size.
-            unsafe {
-                vec.set_len(len_before + bytes_read);
-            }
+        Ok(bytes_read)
+    }
 
-            if bytes_read == 0 {
-                break;
-            } else {
-                offset += bytes_read;
+    pub fn find_sector(&mut self, start: Cluster, offset: usize)
+        -> io::Result<(Cluster, usize)>
+    {
+        let cluster_size = self.bytes_per_sector as usize
+                            * self.sectors_per_cluster as usize;
+
+        let cluster_index = offset / cluster_size;
+        let mut cluster = start;
+
+        for i in 0..cluster_index {
+            let fat_entry = self.fat_entry(cluster)?.status();
+
+            match fat_entry {
+                Status::Data(next) => {
+                    cluster = next;
+                },
+                Status::Eoc(_) => {
+                    if i + 1 != cluster_index {
+                        return Err(io::Error::new(
+                                                io::ErrorKind::UnexpectedEof,
+                                                "Data does not match size"));
+                    }
+
+                    cluster = Cluster::from(0xFFFFFFFF);
+                },
+                _ => return Err(io::Error::new(io::ErrorKind::InvalidData,
+                                               "Invalid cluster entry")),
             }
         }
 
-        Ok(offset)
+        Ok((cluster, cluster_index * cluster_size))
     }
 
     /// Read all of the clusters chained from a starting cluster into a vector.
@@ -140,8 +176,8 @@ impl VFat {
     /// points directly into a cached sector.
     fn fat_entry(&mut self, cluster: Cluster) -> io::Result<&FatEntry> {
         // Map the cluster index to the FAT sector offset.
-        let fat_sector = cluster.index() * 4 / self.bytes_per_sector as u32;
-        let fat_index: usize = (cluster.index() * 4
+        let fat_sector = cluster.fat_index() * 4 / self.bytes_per_sector as u32;
+        let fat_index: usize = (cluster.fat_index() * 4
                                 - fat_sector * self.bytes_per_sector as u32)
                                 as usize;
         if fat_sector >= self.sectors_per_fat {
@@ -150,17 +186,42 @@ impl VFat {
         }
 
         let data = self.device.get(self.fat_start_sector + fat_sector as u64)?;
-        Ok(unsafe { data[fat_index..fat_index+4].cast()[0] })
+        Ok(unsafe { &data[fat_index..fat_index+4].cast()[0] })
     }
 }
 
 impl<'a> FileSystem for &'a Shared<VFat> {
-    type File = ::traits::Dummy;
-    type Dir = ::traits::Dummy;
-    type Entry = ::traits::Dummy;
+    type File = File;
+    type Dir = Dir;
+    type Entry = Entry;
 
     fn open<P: AsRef<Path>>(self, path: P) -> io::Result<Self::Entry> {
-        unimplemented!("FileSystem::open()")
+        use vfat::{Entry, Metadata};
+        use std::path::Component;
+
+        let root_cluster = self.borrow().root_dir_cluster;
+        let mut dir = Entry::new_dir("".to_string(), Metadata::default(),
+                                     Dir::new(root_cluster, self.clone()));
+
+        for segment in path.as_ref().components() {
+            match segment {
+                Component::ParentDir => {
+                    use traits::Entry;
+                    dir = dir.into_dir().ok_or(
+                        io::Error::new(io::ErrorKind::NotFound,
+                                       "Expected dir"))?.find("..")?;
+                },
+                Component::Normal(name) => {
+                    use traits::Entry;
+                    dir = dir.into_dir().ok_or(
+                        io::Error::new(io::ErrorKind::NotFound,
+                                       "Expected dir"))?.find(name)?;
+                }
+                _ => (),
+            }
+        }
+
+        Ok(dir)
     }
 
     fn create_file<P: AsRef<Path>>(self, _path: P) -> io::Result<Self::File> {

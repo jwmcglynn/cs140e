@@ -1,4 +1,5 @@
 use std::io::{self, SeekFrom};
+use std::cmp::min;
 
 use traits;
 use vfat::{VFat, Shared, Cluster};
@@ -10,6 +11,9 @@ pub struct File {
     size: u32,
 
     pointer: u64,
+
+    cluster_current: Cluster,
+    cluster_current_start: usize,
 }
 
 impl File {
@@ -17,7 +21,19 @@ impl File {
     pub fn new(start: Cluster, vfat: Shared<VFat>, size: u32)
         -> File
     {
-        File { start, vfat, size, pointer: 0 }
+        File { start, vfat, size, pointer: 0, cluster_current: start,
+               cluster_current_start: 0 }
+    }
+
+    fn set_pointer(&mut self, pointer: u64) -> io::Result<u64> {
+        self.pointer = pointer;
+
+        let (cluster, cluster_start) = self.vfat.borrow_mut().find_sector(
+            self.start, self.pointer as usize)?;
+        self.cluster_current = cluster;
+        self.cluster_current_start = cluster_start;
+
+        Ok(self.pointer)
     }
 }
 
@@ -37,8 +53,30 @@ impl traits::File for File {
 impl io::Read for File {
     /// Read from the file into a buffer.
     fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
-        self.vfat.borrow_mut().read_cluster(self.start, self.pointer as usize,
-                                            buf)
+        let mut bytes_read: usize = 0;
+        let max_read = min(self.size as usize - self.pointer as usize,
+                           buf.len());
+
+        while self.pointer < self.size as u64 {
+            let bytes = self.vfat.borrow_mut().read_cluster(
+                self.cluster_current,
+                self.pointer as usize - self.cluster_current_start,
+                &mut buf[bytes_read..max_read])?;
+            if bytes == 0 {
+                break;
+            }
+
+            bytes_read += bytes;
+            self.pointer += bytes as u64;
+
+            let (cluster, offset) = self.vfat.borrow_mut().find_sector(
+                self.cluster_current,
+                self.pointer as usize - self.cluster_current_start)?;
+            self.cluster_current = cluster;
+            self.cluster_current_start += offset;
+        }
+
+        Ok(bytes_read)
     }
 }
 
@@ -76,8 +114,7 @@ impl io::Seek for File {
                     Err(io::Error::new(io::ErrorKind::InvalidInput,
                                        "Out of bounds"))
                 } else {
-                    self.pointer = offset;
-                    Ok(self.pointer)
+                    self.set_pointer(offset)
                 }
             },
             SeekFrom::End(offset) => {
@@ -85,18 +122,18 @@ impl io::Seek for File {
                     Err(io::Error::new(io::ErrorKind::InvalidInput,
                                        "Out of bounds"))
                 } else {
-                    self.pointer = (self.size as i64 + offset) as u64;
-                    Ok(self.pointer)
+                    let pointer = (self.size as i64 + offset) as u64;
+                    self.set_pointer(pointer)
                 }
             },
             SeekFrom::Current(offset) => {
                 if offset >= 0 && offset as u64 + self.pointer
                                     <= self.size as u64 {
-                    self.pointer += offset as u64;
-                    Ok(self.pointer)
+                    let pointer = self.pointer + offset as u64;
+                    self.set_pointer(pointer)
                 } else if offset < 0 && (-offset as u64) <= self.pointer {
-                    self.pointer -= -offset as u64;
-                    Ok(self.pointer)
+                    let pointer = self.pointer - (-offset as u64);
+                    self.set_pointer(pointer)
                 } else {
                     Err(io::Error::new(io::ErrorKind::InvalidInput,
                                        "Out of bounds"))

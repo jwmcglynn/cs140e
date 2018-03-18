@@ -36,7 +36,7 @@ impl Time {
     }
 
     pub fn second(&self) -> u8 {
-        (self.0 as u8) & 0b11111 * 2
+        ((self.0 as u8) & 0b11111) * 2
     }
 }
 
@@ -48,8 +48,8 @@ pub struct Attributes(u8);
 /// A structure containing a date and time.
 #[derive(Default, Copy, Clone, Debug, PartialEq, Eq)]
 pub struct Timestamp {
-    pub date: Date,
-    pub time: Time
+    pub time: Time,
+    pub date: Date
 }
 
 /// Metadata for a directory entry.

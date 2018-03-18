@@ -1,5 +1,3 @@
-use vfat::*;
-
 #[derive(PartialEq, Eq, PartialOrd, Ord, Debug, Copy, Clone, Hash)]
 pub struct Cluster(u32);
 
@@ -10,8 +8,17 @@ impl From<u32> for Cluster {
 }
 
 impl Cluster {
-    /// Get the cluster index represented by this cluster.
-    pub fn index(&self) -> u32 {
+    /// Is this a valid cluster?
+    pub fn is_valid(&self) -> bool {
+        self.0 > 2
+    }
+
+    pub fn fat_index(&self) -> u32 {
         self.0
+    }
+
+    /// Get the cluster index represented by this cluster.
+    pub fn data_index(&self) -> u32 {
+        self.0 - 2
     }
 }

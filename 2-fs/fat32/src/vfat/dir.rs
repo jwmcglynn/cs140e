@@ -1,5 +1,4 @@
 use std::ffi::OsStr;
-use std::char::decode_utf16;
 use std::borrow::Cow;
 use std::io;
 
@@ -85,7 +84,7 @@ impl VFatRegularDirEntry {
     pub fn fat_string<'a>(buf: &'a [u8]) -> Cow<'a, str> {
         let mut end = 0;
         for i in 0..buf.len() {
-            if buf[i] == 0x00 || buf[i] == 0x00 {
+            if buf[i] == 0x00 || buf[i] == 0x20 {
                 break
             }
 
@@ -150,6 +149,11 @@ impl VFatUnknownDirEntry {
 }
 
 impl Dir {
+    /// Get the directory for a given cluster.
+    pub fn new(start: Cluster, vfat: Shared<VFat>) -> Dir {
+        Dir { start, vfat }
+    }
+
     /// Finds the entry named `name` in `self` and returns it. Comparison is
     /// case-insensitive.
     ///
@@ -196,14 +200,12 @@ impl DirIterator {
 
         let metadata = Metadata::new(
             entry.attributes, entry.created,
-            Timestamp { date: entry.accessed, time: Time::default() },
+            Timestamp { time: Time::default(), date: entry.accessed },
             entry.modified);
 
         if entry.is_dir() {
-            Entry::new_dir(name, metadata, Dir {
-                start: entry.cluster(),
-                vfat: self.vfat.clone()
-            })
+            Entry::new_dir(name, metadata, Dir::new(entry.cluster(),
+                                                    self.vfat.clone()))
         } else {
             Entry::new_file(name, metadata,
                             File::new(entry.cluster(), self.vfat.clone(),
@@ -217,7 +219,6 @@ impl Iterator for DirIterator {
 
     fn next(&mut self) -> Option<Self::Item> {
         let mut lfn: Vec<&VFatLfnDirEntry> = Vec::new();
-        let mut has_last_entry = false;
 
         for offset in self.offset..self.data.len() {
             let entry = &self.data[offset];
@@ -232,17 +233,15 @@ impl Iterator for DirIterator {
             }
 
             if entry_unknown.is_lfn() {
-                let long_filename = unsafe { &entry.long_filename };
-                assert!(!has_last_entry);
-
-                has_last_entry = long_filename.last_entry();
-                lfn.push(long_filename);
+                lfn.push(unsafe { &entry.long_filename });
             } else {
+                self.offset = offset + 1;
                 return Some(self.create_entry(&mut lfn,
                                               unsafe { entry.regular }));
             }
         }
 
+        self.offset = self.data.len();
         None
     }
 }
