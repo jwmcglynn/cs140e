@@ -94,20 +94,19 @@ impl Allocator {
 
         // Try to service the request from the bin's free list.
         let ref mut bin = self.bins[size_to_bin_number(layout.size())];
+        let bin_size: usize = bin_size(layout.size());
         for mut node in bin.iter_mut() {
             if has_alignment(node.value(), layout.align()) {
                 // Calculate stats.
                 self.alloc_count += 1;
                 self.mem_use_actual += layout.size();
-                self.mem_use_effective += bin_size(layout.size());
+                self.mem_use_effective += bin_size;
                 // Don't count internal fragmentation again, it's already there.
-                self.external_fragmentation_bytes += bin_size(layout.size()) - layout.size();
+                self.external_fragmentation_bytes += bin_size - layout.size();
 
                 return Ok(node.pop() as *mut u8);
             }
         }
-
-        let bin_size: usize = bin_size(layout.size());
 
         let start = align_up(self.unallocated_current, layout.align());
         if self.unallocated_end.saturating_sub(bin_size) < start {

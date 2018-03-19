@@ -45,12 +45,12 @@ pub fn spin_sleep_us(us: u64) {
     let timer = Timer::new();
     let target: u64 = timer.read() + us;
 
-    while timer.read() < target {
+    while timer.read() <= target {
         // Spin...
     }
 }
 
 /// Spins until `ms` milliseconds have passed.
 pub fn spin_sleep_ms(ms: u64) {
-    return spin_sleep_us(ms * 1000);
+    spin_sleep_us(ms * 1000);
 }

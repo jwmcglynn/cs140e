@@ -116,14 +116,15 @@ impl VFatLfnDirEntry {
     }
 
     pub fn append_name(&self, buf: &mut Vec<u16>) {
-        let subsets = [&self.name_1[..], &self.name_2[..], &self.name_3[..]];
-        for subset in subsets.iter() {
-            for c in subset.iter() {
-                if *c == 0x0000 || *c == 0x00FF {
-                    return;
-                }
+        let start = buf.len();
+        buf.extend_from_slice(&self.name_1);
+        buf.extend_from_slice(&self.name_2);
+        buf.extend_from_slice(&self.name_3);
 
-                buf.push(*c);
+        for i in start..buf.len() {
+            if buf[i] == 0x0000 || buf[i] == 0x00FF {
+                buf.resize(i, 0);
+                return;
             }
         }
     }
@@ -180,7 +181,7 @@ impl DirIterator {
     fn lfn_to_string(lfn: &mut Vec<&VFatLfnDirEntry>) -> String {
         lfn.sort_by_key(|a| a.sequence_number());
 
-        let mut name_data: Vec<u16> = Vec::new();
+        let mut name_data: Vec<u16> = Vec::with_capacity(13 * lfn.len());
         for entry in lfn.iter() {
             entry.append_name(&mut name_data);
         }
@@ -218,7 +219,7 @@ impl Iterator for DirIterator {
     type Item = Entry;
 
     fn next(&mut self) -> Option<Self::Item> {
-        let mut lfn: Vec<&VFatLfnDirEntry> = Vec::new();
+        let mut lfn: Vec<&VFatLfnDirEntry> = Vec::with_capacity(20);
 
         for offset in self.offset..self.data.len() {
             let entry = &self.data[offset];
@@ -250,12 +251,10 @@ impl traits::Dir for Dir {
     type Entry = Entry;
     type Iter = DirIterator;
 
-    /// Returns an interator over the entries in this directory.
+    /// Returns an iterator over the entries in this directory.
     fn entries(&self) -> io::Result<Self::Iter> {
         let mut data = Vec::new();
-        let bytes_read = self.vfat.borrow_mut().read_chain(self.start,
-                                                           &mut data)?;
-        assert_eq!(bytes_read, data.len());
+        self.vfat.borrow_mut().read_chain(self.start, &mut data)?;
 
         Ok(DirIterator { data: unsafe { data.cast() }, offset: 0,
                          vfat: self.vfat.clone() })

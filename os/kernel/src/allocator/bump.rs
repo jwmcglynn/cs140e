@@ -1,6 +1,8 @@
 use alloc::heap::{AllocErr, Layout};
 
 use allocator::util::*;
+use console::kprintln;
+use allocator::AllocStats;
 
 /// A "bump" allocator: allocates memory by bumping a pointer; never frees.
 #[derive(Debug)]

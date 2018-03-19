@@ -23,10 +23,8 @@ pub mod console;
 pub mod shell;
 pub mod fs;
 
-use pi::atags::Atags;
 use pi::gpio::Gpio;
 use pi::timer::spin_sleep_ms;
-use console::kprintln;
 
 #[cfg(not(test))]
 use allocator::Allocator;
@@ -60,21 +58,8 @@ pub extern "C" fn kmain() {
         spin_sleep_ms(100);
     }
 
-    let mut atags: Atags = Atags::get();
-    loop {
-        match atags.next() {
-            Some(atag) => kprintln!("ATAG: {:#?}", atag),
-            None => break,
-        }
-    }
-
     ALLOCATOR.initialize();
-
-    let mut v = vec![];
-    for i in 0..1000 {
-        v.push(i);
-    }
-    kprintln!("{:?}", v);
+    FILE_SYSTEM.initialize();
 
     shell::shell("> ");
 }
