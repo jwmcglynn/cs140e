@@ -1,5 +1,6 @@
 use std::fmt;
 use std::mem;
+use std::cmp::max;
 use alloc::heap::{AllocErr, Layout};
 use console::kprintln;
 
@@ -88,21 +89,25 @@ impl Allocator {
     /// (`AllocError::Exhausted`) or `layout` does not meet this allocator's
     /// size or alignment constraints (`AllocError::Unsupported`).
     pub fn alloc(&mut self, layout: Layout) -> Result<*mut u8, AllocErr> {
-        if layout.size() > self.max_bin_size {
-            return Err(AllocErr::Unsupported{ details: "Allocation too large." });
+        // Enforce a size of at least the alignment, so that large alignment
+        // requests don't cause excessive internal fragmentation.
+        let size = max(layout.align(), layout.size());
+
+        if size > self.max_bin_size {
+            return Err(AllocErr::Exhausted { request: layout });
         }
 
         // Try to service the request from the bin's free list.
-        let ref mut bin = self.bins[size_to_bin_number(layout.size())];
-        let bin_size: usize = bin_size(layout.size());
+        let ref mut bin = self.bins[size_to_bin_number(size)];
+        let bin_size: usize = bin_size(size);
         for mut node in bin.iter_mut() {
             if has_alignment(node.value(), layout.align()) {
                 // Calculate stats.
                 self.alloc_count += 1;
-                self.mem_use_actual += layout.size();
+                self.mem_use_actual += size;
                 self.mem_use_effective += bin_size;
                 // Don't count internal fragmentation again, it's already there.
-                self.external_fragmentation_bytes += bin_size - layout.size();
+                self.external_fragmentation_bytes += bin_size - size;
 
                 return Ok(node.pop() as *mut u8);
             }
@@ -118,10 +123,10 @@ impl Allocator {
 
             // Calculate stats.
             self.alloc_count += 1;
-            self.mem_use_actual += layout.size();
+            self.mem_use_actual += size;
             self.mem_use_effective += alloc_size;
             self.internal_fragmentation_bytes += align_padding;
-            self.external_fragmentation_bytes += bin_size - layout.size();
+            self.external_fragmentation_bytes += bin_size - size;
 
             Ok(start as *mut u8)
         }
@@ -141,17 +146,21 @@ impl Allocator {
     /// Parameters not meeting these conditions may result in undefined
     /// behavior.
     pub fn dealloc(&mut self, ptr: *mut u8, layout: Layout) {
+        // Enforce a size of at least the alignment, so that large alignment
+        // requests don't cause excessive internal fragmentation.
+        let size = max(layout.align(), layout.size());
+
         unsafe {
-            self.bins[size_to_bin_number(layout.size())].push(ptr as *mut usize);
+            self.bins[size_to_bin_number(size)].push(ptr as *mut usize);
         }
 
         // Calculate stats.
-        let bin_size = bin_size(layout.size());
+        let bin_size = bin_size(size);
         self.alloc_count -= 1;
-        self.mem_use_actual -= layout.size();
+        self.mem_use_actual -= size;
         self.mem_use_effective -= bin_size;
         // Internal fragmentation can't be recovered, it persists in the block.
-        self.external_fragmentation_bytes -= bin_size - layout.size();
+        self.external_fragmentation_bytes -= bin_size - size;
     }
 }
 
