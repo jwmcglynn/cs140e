@@ -33,6 +33,13 @@ impl Timer {
         return (self.registers.CHI.read() as u64) << 32
                 | (self.registers.CLO.read() as u64);
     }
+
+    /// Sets up a match in timer 1 to occur `us` microseconds from now. If
+    /// interrupts for timer 1 are enabled and IRQs are unmasked, then a timer
+    /// interrupt will be issued in `us` microseconds.
+    pub fn tick_in(&mut self, us: u32) {
+        unimplemented!()
+    }
 }
 
 /// Returns the current time in microseconds.
@@ -53,4 +60,11 @@ pub fn spin_sleep_us(us: u64) {
 /// Spins until `ms` milliseconds have passed.
 pub fn spin_sleep_ms(ms: u64) {
     spin_sleep_us(ms * 1000);
+}
+
+/// Sets up a match in timer 1 to occur `us` microseconds from now. If
+/// interrupts for timer 1 are enabled and IRQs are unmasked, then a timer
+/// interrupt will be issued in `us` microseconds.
+pub fn tick_in(us: u32) {
+    unimplemented!()
 }

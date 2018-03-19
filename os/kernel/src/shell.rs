@@ -245,7 +245,7 @@ const BACKSPACE: u8 = 8;
 const DELETE: u8 = 127;
 
 /// Starts a shell using `prefix` as the prefix for each line. This function
-/// never returns: it is perpetually in a shell loop.
+/// returns if the `exit` command is called.
 pub fn shell(prefix: &str) -> ! {
     let mut working_dir = PathBuf::from("/");
 

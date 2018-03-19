@@ -18,3 +18,4 @@ pub mod uart;
 pub mod gpio;
 pub mod common;
 pub mod atags;
+pub mod interrupt;
