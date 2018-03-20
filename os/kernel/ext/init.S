@@ -80,7 +80,11 @@ switch_to_el1:
     // change execution level to EL1 (ref: C5.2.19)
     mov     x2, #0x3c5
     msr     SPSR_EL2, x2
-    // FIXME: Return to EL1 at `set_stack`.
+
+    // Return to EL1 at `set_stack`.
+    adr     x2, set_stack
+    msr     ELR_EL2, x2
+    eret
 
 set_stack:
     // set the current stack pointer

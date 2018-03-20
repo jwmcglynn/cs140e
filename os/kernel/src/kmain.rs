@@ -41,6 +41,8 @@ use allocator::Allocator;
 use fs::FileSystem;
 use process::GlobalScheduler;
 
+use console::kprintln;
+
 #[cfg(not(test))]
 #[global_allocator]
 pub static ALLOCATOR: Allocator = Allocator::uninitialized();
@@ -73,6 +75,8 @@ pub extern "C" fn kmain() {
 
     ALLOCATOR.initialize();
     FILE_SYSTEM.initialize();
+
+    kprintln!("CurrentEL: {}", unsafe { aarch64::current_el() } );
 
     shell::shell("> ");
 }
