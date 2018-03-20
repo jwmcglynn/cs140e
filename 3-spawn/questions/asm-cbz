@@ -1,0 +1,3 @@
+cbz is compare and branch on zero.  It compares a register with zero, and then branches to a label if it is zero:
+
+cbz x0, is_zero

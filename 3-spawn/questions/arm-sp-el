@@ -1,0 +1,10 @@
+When the exception occurs, the PSTATE is saved to SPSR_ELx, and the preferred exception link address to ELR_ELx (where x = level that will handle the exception).  Depending on the value of SPSel, A may be saved in SP_ELx.
+
+Assuming that this state is not modified, these values are valid to reuse and return to the previous exception level.
+
+To return the registers to write to depend on the value of SPSel (in the PSTATE).  If SPSel is 0, write to SP_EL0, otherwise write to SP_ELx:
+
+If SPSel == 1:
+    msr SP_ELs, B
+If SPSel == 0:
+    msr SP_EL0, B

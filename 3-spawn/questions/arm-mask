@@ -1,0 +1,24 @@
+To unmask IRQ interrupts, write to PSTATE.DAIF, specifically the I bit for IRQs.
+
+The easiest way is to use DAIFClr, which allows clearing a specific bit:
+
+3 = D(ebug) - Synchronous (watchpoint, breakpoint, step)
+2 = A(bort) - SError
+1 = I(RQ)
+0 = F(IQ)
+
+msr DAIFClr, #1
+
+
+
+=== Additional notes
+
+There is also the DAIF register, which can be used to access the values directly, but it has different offsets:
+
+DAIF has the following bits:
+    [31:10] Reserved
+    [9] D
+    [8] A
+    [7] I
+    [6] F
+    [5:0] Reserved

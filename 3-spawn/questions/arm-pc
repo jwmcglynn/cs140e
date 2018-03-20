@@ -1,0 +1,8 @@
+Assuming A is a macro that evaluates to a mov source parameter.
+
+For ret, PC will be set to the value in lr:
+    mov lr, A
+
+For eret, PC will be set to the value in ELR_ELx, where x is the current exception level.
+    mov x0, A
+    msr ELR_ELx, x0

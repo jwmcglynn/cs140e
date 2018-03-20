@@ -1,0 +1,2 @@
+To determine the current exception level, read the CurrentEL special register:
+    mrs x0, CurrentEL

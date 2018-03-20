@@ -1,0 +1,25 @@
+// Implement memcpy in arm assembly.
+//
+// Equivalent to:
+// void memcpy(void* source, void* dest, size_t bytes) {
+//    do {
+//        *source++ = *dest++;
+//        bytes -= 8;
+//    } while (bytes != 0);
+// }
+//
+// Not very safe, but valid considering the preconditions.
+//
+// Source = x0
+// Destination = x1
+// Bytes = x2 (non-zero, multiple of 8)
+
+next:
+    // Copy over 8 bytes, increment source and dest.
+    ldr x4, [x0], #8
+    str x4, [x1], #8
+
+    // Increment source and destination by 8.
+    sub x2, x2, #8  // bytes -= 8
+    cbnz x2, next  // If bytes is not zero, repeat.
+ret

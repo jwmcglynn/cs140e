@@ -1,0 +1,1 @@
+For AArch64 with the source at a lower exception level, a "svc" is  synchronous exception which will use VBAR_ELx offset 0x400.

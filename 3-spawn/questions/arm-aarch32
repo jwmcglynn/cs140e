@@ -1,0 +1,5 @@
+To change to AArch32 mode, we need to set the SPSR.M[4] field (SPSR bit 4) to 1.  Assuming current exception level x:
+
+mrs x0 SPSR_ELx
+orr x0, x0, #(1 << 4)
+msr SPSR_ELx, x0

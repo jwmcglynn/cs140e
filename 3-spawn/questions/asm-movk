@@ -1,0 +1,5 @@
+To write 0xABCDE to the ELR_EL1 register, we need two operations since that immediate requires more than 16-bits:
+
+mov x0, #0xBCDE
+movk x0, #(0xA << 16)
+msr ELR_EL1, x0

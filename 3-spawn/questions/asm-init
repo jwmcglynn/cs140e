@@ -1,0 +1,50 @@
+Read the first two bits of the MPIDR_EL1 register, the current core id (assuming a maximum of 4 cores, the bottom 8 bits are reserved for aff0 or core id).  If we're on core 0, go to setup, otherwise call wfe in a loop to sleep the core.
+
+For the setup routine called on core 0, read the address of the _start label and store it into x1 so that we can use it as a stack pointer.
+
+Read from the CurrentEL register into x0, to determine the current exception level, and then mask and shift bits 2-3 down, to access the exception level (the other bits are reserved).
+
+At this point, x1 contains the stack pointer and x0 contains the exception level.
+
+If the current exception level (x0) is equal to EL3, prepare to switch to the EL2 level.  If not, jump down to the next block for switch_to_el1.
+
+    Write to the x2 register, and set the following bits, then load into the SCR_EL3, secure configuration register, and disable some security features and ensure that the lower levels run as AArch64 by setting the following bits:
+        0: NS - Non-secure
+        4-5: RES1 - Reserved bits, should be set to 1
+        7: SMD - Secure Monitor Call disable, set to 1 to disable at EL1 and above
+        8: HCE - Hypervisor call enable
+        10: RW- Sets the lower levels to be AArch64.
+
+    Write to SPSR_EL3, the saved program status register, to set all mask bits, set SPSel so that SP uses the current exception level, and set the next execution level to 2:
+        0: M[0] - Set SPSel to 1, so that SP is determined by the EL.
+        3: M[3] - Set the exception level to 2.
+        6: F - FIQ mask bit.
+        7: I - IRQ mask bit.
+        8: A - SError interrupt mask bit.
+        9: D - Synchronize mask bit.
+
+    Next, load the address of switch_to_el1 into the ELR_EL3 register, so that will become the address that the next execution level starts at and eret to lower to that level.
+
+If we're in EL1, skip ahead and restore the stack pointer from x1, zero out the BSS and go to kmain.
+
+Set the stack pointer for EL1 to the address of _start.
+
+Next, read CNTHCTL_EL2, the counter-timer hypervisor control register, and set the bits to trap non-secure EL0 and EL1 accesses to the physical timer and counter register to EL2.  Then, set the physical counter offset to 0.
+
+Now, set the RW bit of HCR_EL2, to enable AArch64 mode for EL1, so that EL1 runs in 64-bit mode.  The 1 bit is also set, because it is a reserved bit where the caller is expected to write 1.
+
+Next, clear the CPTR_EL2 register, disabling trapping non-secure accesses to CPACR_EL1, trace registers, advanced floating-point functionality and SVE (scalable vector extension).
+    - If this was enabled, the functionality could potentially be used to prevent having to save SIMD registers when an exception occurs, by determining if they are used and enabling them on demand.
+    - (Note that CPTR_EL2 has a few res1 fields, [13:12], [9], and [7:0] but they are set to 0 in this call).
+
+Set bit 20 and 21 of the CPACR_EL1 (architecture feature access control) register, to disable trapping for SVE, SIMD, and floating-point execution.
+
+Next, set the SCTRL_EL1 register to 0x30d00800, which corresponds to all-zero except the reserved bits where 1 should be written.  This disables most trapping behavior, sets the endianness to little endian, disable error synchronization barrier, disables memory caching for EL0 and EL1, disables the ability to change DAIF from EL0, and disables address translation and alignment checks.
+
+Finally, write to SPSR_EL2, the saved program status register, to set all mask bits, set SPSel so that SP uses the current exception level, and set the next execution level to 2:
+    0: M[0] - Set SPSel to 1, so that SP is determined by the EL.
+    3: M[2] - Set the exception level to 1.
+    6: F - FIQ mask bit.
+    7: I - IRQ mask bit.
+    8: A - SError interrupt mask bit.
+    9: D - Synchronize mask bit.
