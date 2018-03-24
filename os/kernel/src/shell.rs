@@ -50,9 +50,10 @@ impl<'a> Command<'a> {
         self.args[0]
     }
 
-    fn execute(&self, working_dir: &mut PathBuf) {
+    fn execute(&self, working_dir: &mut PathBuf) -> bool {
         match self.path() {
             "echo" => handle_echo(&self.args[1..]),
+            "exit" => return false,
             "memstat" => handle_memstat(&self.args[1..]),
             "pwd" => handle_pwd(&self.args[1..], working_dir),
             "cd" => handle_cd(&self.args[1..], working_dir),
@@ -60,6 +61,8 @@ impl<'a> Command<'a> {
             "cat" => handle_cat(&self.args[1..], working_dir),
             path => kprintln!("Unknown command: {}", path)
         }
+
+        true
     }
 }
 
@@ -274,7 +277,9 @@ pub fn shell(prefix: &str) -> ! {
                         // No command, ignore.
                     }
                     Ok(command) => {
-                        command.execute(&mut working_dir);
+                        if !command.execute(&mut working_dir) {
+                            break;
+                        }
                     },
                 }
 

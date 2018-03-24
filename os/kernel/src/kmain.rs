@@ -78,5 +78,7 @@ pub extern "C" fn kmain() {
 
     kprintln!("CurrentEL: {}", unsafe { aarch64::current_el() } );
 
-    shell::shell("> ");
+    unsafe { asm!("brk 3" :::: "volatile"); }
+
+    kprintln!("Should be unreachable");
 }

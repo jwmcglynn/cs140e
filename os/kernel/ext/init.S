@@ -75,7 +75,8 @@ switch_to_el1:
     msr     SCTLR_EL1, x2
 
     // set up exception handlers
-    // FIXME: load `_vectors` addr into appropriate register (guide: 10.4)
+    adr    x2, _vectors
+    msr    VBAR_EL1, x2
 
     // change execution level to EL1 (ref: C5.2.19)
     mov     x2, #0x3c5
@@ -108,13 +109,35 @@ go_kmain:
     b       halt
 
 context_save:
-    // FIXME: Save the remaining context to the stack.
+    // stp = store pair, ex stp x0, x1, [SP, #-16]!
+    // Save lr, x1, and x2, keep SP 16-byte aligned.
+    stp lr, x0, [SP, #-16]!
+    stp x1, x2, [SP, #-16]!
+
+    // Pass x0 as the first parameter.
+    mrs x1, ESR_EL1  // Exception syndrome.
+    mov x2, #0  // Set TrapFrame to 0 for now.
+
+    // Call handle_exception(info: Info, esr: u32, tf: &mut TrapFrame)
+    bl handle_exception
 
 .global context_restore
 context_restore:
-    // FIXME: Restore the context from the stack.
+    // Restore context
+    ldp x1, x2, [SP], #16
+    ldp lr, x0, [SP], #16
 
     ret
+
+#define SOURCE_CURRENTSP_EL0 0
+#define SOURCE_CURRENTSP_ELX 1
+#define SOURCE_LOWER_AARCH64 2
+#define SOURCE_LOWER_AARCH32 3
+
+#define KIND_SYNCHRONOUS 0
+#define KIND_IRQ 1
+#define KIND_FIQ 2
+#define KIND_SERROR 3
 
 #define HANDLER(source, kind) \
     .align 7; \
@@ -125,6 +148,16 @@ context_restore:
     ldp     lr, x0, [SP], #16; \
     eret
 
+#define HANDLER_SOURCE(source) \
+    HANDLER(source, KIND_SYNCHRONOUS); \
+    HANDLER(source, KIND_IRQ); \
+    HANDLER(source, KIND_FIQ); \
+    HANDLER(source, KIND_SERROR) \
+
+// Create the VBAR_ELn exception vector table.
 .align 11
 _vectors:
-    // FIXME: Setup the 16 exception vectors.
+    HANDLER_SOURCE(SOURCE_CURRENTSP_EL0)
+    HANDLER_SOURCE(SOURCE_CURRENTSP_ELX)
+    HANDLER_SOURCE(SOURCE_LOWER_AARCH64)
+    HANDLER_SOURCE(SOURCE_LOWER_AARCH32)
