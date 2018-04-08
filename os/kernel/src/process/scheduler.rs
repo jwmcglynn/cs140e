@@ -3,6 +3,7 @@ use std::collections::VecDeque;
 use mutex::Mutex;
 use process::{Process, State, Id};
 use traps::TrapFrame;
+use shell;
 
 /// The `tick` time.
 // FIXME: When you're ready, change this to something more reasonable.
@@ -37,7 +38,37 @@ impl GlobalScheduler {
     /// using timer interrupt based preemptive scheduling. This method should
     /// not return under normal conditions.
     pub fn start(&self) {
-        unimplemented!("GlobalScheduler::start()")
+        *self.0.lock() = Some(Scheduler::new());
+
+        let mut process = Process::new().expect("First process failed");
+        process.trap_frame.elr = run_shell as u64;
+        process.trap_frame.sp = process.stack.top().as_u64();
+        // Don't mask DAIF, set execution level to 0.
+        process.trap_frame.spsr = 0x0;
+        let tf = &*process.trap_frame;
+
+        //self.add(process);
+
+        // Switch to process.
+        unsafe {
+            asm!(
+                "// Set the SP to the start of the trap frame.
+                 mov SP, $0
+
+                 // Restore the trap frame registers.
+                 bl context_restore
+
+                 // Reset SP to _start.
+                 adr x0, _start
+                 mov SP, x0
+                 mov x0, xzr
+                 mov lr, xzr
+
+                 // Start the process.
+                 eret"
+                 :: "r"(tf)
+                 :: "volatile");
+        }
     }
 }
 
@@ -51,7 +82,11 @@ struct Scheduler {
 impl Scheduler {
     /// Returns a new `Scheduler` with an empty queue.
     fn new() -> Scheduler {
-        unimplemented!("Scheduler::new()")
+        Scheduler {
+            processes: VecDeque::new(),
+            current: None,
+            last_id: None
+        }
     }
 
     /// Adds a process to the scheduler's queue and returns that process's ID if
@@ -77,4 +112,12 @@ impl Scheduler {
     fn switch(&mut self, new_state: State, tf: &mut TrapFrame) -> Option<Id> {
         unimplemented!("Scheduler::switch()")
     }
+}
+
+extern fn run_shell() {
+    unsafe { asm!("brk 1" :::: "volatile"); }
+    unsafe { asm!("brk 2" :::: "volatile"); }
+    shell::shell("user0> ");
+    unsafe { asm!("brk 3" :::: "volatile"); }
+    loop { shell::shell("user1> "); }
 }
