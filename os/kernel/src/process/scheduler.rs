@@ -4,6 +4,8 @@ use mutex::Mutex;
 use process::{Process, State, Id};
 use traps::TrapFrame;
 use shell;
+use pi::interrupt::{Interrupt, Controller};
+use pi::timer::tick_in;
 
 /// The `tick` time.
 // FIXME: When you're ready, change this to something more reasonable.
@@ -48,6 +50,9 @@ impl GlobalScheduler {
         let tf = &*process.trap_frame;
 
         //self.add(process);
+
+        Controller::new().enable(Interrupt::Timer1);
+        tick_in(TICK);
 
         // Switch to process.
         unsafe {

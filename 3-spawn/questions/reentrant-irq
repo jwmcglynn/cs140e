@@ -1,0 +1,3 @@
+Reentrant IRQs are useful for interrupts that are transient, and may result in loss of information if they are ignored, such as receiving data from UART or the network.  However, if IRQs are not acknowledged before unmasking them then they'll immediately trigger again, and then repeat the cycle once the code hits the same path again.
+
+So for transient IRQs, it would be useful to quickly buffer the data so that it isn't lost, acknowledge the IRQ, unmask it, and then do further processing if required.

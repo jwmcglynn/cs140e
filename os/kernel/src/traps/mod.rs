@@ -59,7 +59,17 @@ pub extern fn handle_exception(info: Info, esr: u32, tf: &mut TrapFrame) {
             Syndrome::Svc(_) => (),
             _ => { tf.elr += 4; },
         }
-    }
 
-    shell::shell("1> ");
+        shell::shell("1> ");
+    } else if info.kind == Kind::Irq {
+        let controller = Controller::new();
+        let interrupts = [Interrupt::Timer1, Interrupt::Timer3, Interrupt::Usb,
+                          Interrupt::Gpio0, Interrupt::Gpio1, Interrupt::Gpio2,
+                          Interrupt::Gpio3, Interrupt::Uart];
+        for int in interrupts.iter() {
+            if controller.is_pending(*int) {
+                handle_irq(*int, tf);
+            }
+        }
+    }
 }
