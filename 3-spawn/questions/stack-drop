@@ -1,0 +1,1 @@
+The Stack object is held in Process, so when the Process object is destroyed it calls the drop() from the Drop trait on the Stack object.  This method calls back into the allocator and releases the stack memory.

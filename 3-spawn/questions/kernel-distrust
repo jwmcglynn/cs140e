@@ -1,0 +1,3 @@
+Yes, processes have to trust the kernel since it controls everything about the process: it has full access to the memory, execution time, the values of the registers before and after context switches, and that services provided by the kernel follow the contract.
+
+The kernel is used to start the process, allocate memory, and provide system calls (such as accessing the filesystem, sleep).

@@ -109,23 +109,145 @@ go_kmain:
     b       halt
 
 context_save:
-    // stp = store pair, ex stp x0, x1, [SP, #-16]!
-    // Save lr, x1, and x2, keep SP 16-byte aligned.
-    stp lr, x0, [SP, #-16]!
-    stp x1, x2, [SP, #-16]!
+    // Before:
+    //   | lr | x0 |
+    //   ^  -16 b- |
+    //   |
+    //   SP
+
+    // Goal:
+    //   |     Data     | lr | x0 |
+    //   ^  -784 bytes- |  -16 b- |
+    //   |
+    //   SP
+
+    // 64-bit registers: x1->x29, not including x0, lr = 240 bytes
+    // 16 instructions
+    sub SP, SP, #240
+    stp x1, x2, [SP]
+    stp x3, x4, [SP, #16]
+    stp x5, x6, [SP, #32]
+    stp x7, x8, [SP, #48]
+    stp x9, x10, [SP, #64]
+    stp x11, x12, [SP, #80]
+    stp x13, x14, [SP, #96]
+    stp x15, x16, [SP, #112]
+    stp x17, x18, [SP, #128]
+    stp x19, x20, [SP, #144]
+    stp x21, x22, [SP, #160]
+    stp x23, x24, [SP, #176]
+    stp x25, x26, [SP, #192]
+    stp x27, x28, [SP, #208]
+    str x29, [SP, #224]
+
+    // After x1-x29:
+    //   |   x1 .. x29   | lr | x0 |
+    //   ^    -240 b-    |  -16 b- |
+    //   |
+    //   SP
+
+    // 128-bit registers: q0->q31 = 512 bytes
+    // 17 instructions
+    sub SP, SP, #512
+    stp q0, q1, [SP]
+    stp q2, q3, [SP, #32]
+    stp q4, q5, [SP, #64]
+    stp q6, q7, [SP, #96]
+    stp q8, q9, [SP, #128]
+    stp q10, q11, [SP, #160]
+    stp q12, q13, [SP, #192]
+    stp q14, q15, [SP, #224]
+    stp q16, q17, [SP, #256]
+    stp q18, q19, [SP, #288]
+    stp q20, q21, [SP, #320]
+    stp q22, q23, [SP, #352]
+    stp q24, q25, [SP, #384]
+    stp q26, q27, [SP, #416]
+    stp q28, q29, [SP, #448]
+    stp q30, q31, [SP, #480]
+
+    // After q0-q31:
+    //   |   q0 .. q31   |  x1 .. x29   | lr | x0 |
+    //   ^    -512 b-    |   -240 b-    |  -16 b- |
+    //   |
+    //   SP
+
+    // System state: 32 bytes, but push another 16 for non-trap-frame state.
+    // 7 instructions
+    sub SP, SP, #48
+    mrs x1, ELR_EL1
+    mrs x2, SPSR_EL1
+    mrs x3, SP_EL0
+    mrs x4, TPIDR_EL0
+
+    stp x1, x2, [SP, #16]
+    stp x3, x4, [SP, #32]
+
+
+    // After system state:
+    //   |       | ELR, SPSR, SP, TPIDR | q0 .. q31   |  x1 .. x29   | lr | x0 |
+    //   ^ -16 b-|       -32 b-         |  -512 b-    |   -240 b-    |  -16 b- |
+    //   |
+    //   SP
 
     // Pass x0 as the first parameter.
     mrs x1, ESR_EL1  // Exception syndrome.
-    mov x2, #0  // Set TrapFrame to 0 for now.
+    add x2, SP, #16  // Trap frame is 800 bytes long, and starts at SP+16.
+
+    str lr, [SP]  // Store lr for call.
 
     // Call handle_exception(info: Info, esr: u32, tf: &mut TrapFrame)
     bl handle_exception
 
+    ldr lr, [SP], #16  // Restore lr, increment sp.
+
 .global context_restore
 context_restore:
-    // Restore context
-    ldp x1, x2, [SP], #16
-    ldp lr, x0, [SP], #16
+    // System state, 7 instructions.
+    ldp x1, x2, [SP]
+    ldp x3, x4, [SP, #16]
+    msr ELR_EL1, x1
+    msr SPSR_EL1, x2
+    msr SP_EL0, x3
+    msr TPIDR_EL0, x4
+    add SP, SP, #32
+
+    // q0->q31, 18 instructions.
+    ldp q0, q1, [SP]
+    ldp q2, q3, [SP, #32]
+    ldp q4, q5, [SP, #64]
+    ldp q6, q7, [SP, #96]
+    ldp q8, q9, [SP, #128]
+    ldp q10, q11, [SP, #160]
+    ldp q12, q13, [SP, #192]
+    ldp q14, q15, [SP, #224]
+    ldp q16, q17, [SP, #256]
+    ldp q18, q19, [SP, #288]
+    ldp q20, q21, [SP, #320]
+    ldp q22, q23, [SP, #352]
+    ldp q24, q25, [SP, #384]
+    ldp q26, q27, [SP, #416]
+    ldp q28, q29, [SP, #448]
+    ldp q30, q31, [SP, #480]
+    add SP, SP, #512
+
+    // x1->x29, 16 instructions.
+    ldp x1, x2, [SP]
+    ldp x3, x4, [SP, #16]
+    ldp x5, x6, [SP, #32]
+    ldp x7, x8, [SP, #48]
+    ldp x9, x10, [SP, #64]
+    ldp x11, x12, [SP, #80]
+    ldp x13, x14, [SP, #96]
+    ldp x15, x16, [SP, #112]
+    ldp x17, x18, [SP, #128]
+    ldp x19, x20, [SP, #144]
+    ldp x21, x22, [SP, #160]
+    ldp x23, x24, [SP, #176]
+    ldp x25, x26, [SP, #192]
+    ldp x27, x28, [SP, #208]
+    ldr x29, [SP, #224]
+    add SP, SP, #240
 
     ret
 

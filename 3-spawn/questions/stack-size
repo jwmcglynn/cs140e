@@ -1,0 +1,13 @@
+We could implement a kernel call, grow_stack, which would allocate a new block of memory for the larger stack, copy the existing stack into it, and then either remap virtual memory or change SP to point to the new stack location.
+
+
+The process could execute:
+
+// Request 2 MB of stack
+mov x0, #(2 << 20)
+sys 1  // Use 1 to indicate "grow_stack"
+
+Then on the rust size, reallocate the stack and compute the new location of TrapFrame::sp with:
+
+let offset = stack.top() - trap_frame.sp;
+trap_frame.sp = new_stack.top() - offset;

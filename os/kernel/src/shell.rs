@@ -249,7 +249,7 @@ const DELETE: u8 = 127;
 
 /// Starts a shell using `prefix` as the prefix for each line. This function
 /// returns if the `exit` command is called.
-pub fn shell(prefix: &str) -> ! {
+pub fn shell(prefix: &str) {
     let mut working_dir = PathBuf::from("/");
 
     loop {
@@ -278,7 +278,7 @@ pub fn shell(prefix: &str) -> ! {
                     }
                     Ok(command) => {
                         if !command.execute(&mut working_dir) {
-                            break;
+                            return;
                         }
                     },
                 }

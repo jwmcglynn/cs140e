@@ -76,9 +76,19 @@ pub extern "C" fn kmain() {
     ALLOCATOR.initialize();
     FILE_SYSTEM.initialize();
 
+    kprintln!("kmain CurrentEL: {}", unsafe { aarch64::current_el() } );
+
+    unsafe { asm!("brk 1" :::: "volatile"); }
+
+    kprintln!("Returned! CurrentEL: {}", unsafe { aarch64::current_el() } );
+    kprintln!("Doing more things");
+
+    unsafe { asm!("brk 2" :::: "volatile"); }
+
     kprintln!("CurrentEL: {}", unsafe { aarch64::current_el() } );
+    kprintln!("Last print");
 
-    unsafe { asm!("brk 3" :::: "volatile"); }
-
-    kprintln!("Should be unreachable");
+    loop {
+        shell::shell("end>");
+    }
 }

@@ -51,10 +51,15 @@ pub extern fn handle_exception(info: Info, esr: u32, tf: &mut TrapFrame) {
     if info.kind == Kind::Synchronous {
         let syndrome = Syndrome::from(esr);
         kprintln!("Syndrome: {:#?}", syndrome);
+
+        // TODO: Instructions says that for "synchronous exceptions other than
+        // systems calls, the address is the instruction that generated the
+        // exception.  What instructions are system calls?
+        match syndrome {
+            Syndrome::Svc(_) => (),
+            _ => { tf.elr += 4; },
+        }
     }
 
-    loop {
-        kprintln!("Starting shell...");
-        shell::shell("> ");
-    }
+    shell::shell("1> ");
 }

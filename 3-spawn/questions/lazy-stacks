@@ -1,0 +1,3 @@
+Once we have virtual memory, we can allocate one page worth of virtual memory for the stack by default, and whenever the stack grows beyond the page bounds, a DataAbort will be generated.  When that occurs, we can allocate additional memory for the next portion of the stack and resume execution of the program.
+
+Effectively, the memory doesn't exist until it is accessed.

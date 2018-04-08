@@ -1,0 +1,7 @@
+To trap float accesses, first set up floating point operations to trap by setting SCR_EL1.FPEN to 01, so that a trap is generated in EL0 when floating point functionality using those registers is used.
+
+This generates a synchronous exception with Syndrome SimdFp.  When this occurs, floating point registers be stored in the trap frame for all future calls, and the exception can be disabled by setting FPEN to 11.
+
+The trap frame should always include the fields for floating point registers, but the assembly code shouldn't store them before calling into handle_exception.
+
+In handle_exception, the TPIDR would be looked up in a map to see if the thread id has exceptions enabled, which is safe because rust isn't using floating point operations at this point so it won't overwrite the registers, and if so the floating point registers are backed up and restored.
