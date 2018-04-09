@@ -67,7 +67,7 @@ impl From<u32> for Syndrome {
         let exception_class = esr >> 26;
         match exception_class {
             0b000000 => Unknown,
-            0b000000 => WfiWfe,
+            0b000001 => WfiWfe,
             0b000011 => McrMrc,
             0b000100 => McrrMrrc,
             0b000101 => McrMrc,

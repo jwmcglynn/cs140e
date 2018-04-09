@@ -3,14 +3,14 @@ use std::collections::VecDeque;
 use mutex::Mutex;
 use process::{Process, State, Id};
 use traps::TrapFrame;
-use shell;
 use pi::interrupt::{Interrupt, Controller};
 use pi::timer::tick_in;
 use aarch64;
+use run_blinky;
+use run_shell;
 
 /// The `tick` time.
-// FIXME: When you're ready, change this to something more reasonable.
-pub const TICK: u32 = 2 * 1000 * 1000;
+pub const TICK: u32 = 10 * 1000;
 
 /// Process scheduler for the entire machine.
 #[derive(Debug)]
@@ -53,14 +53,9 @@ impl GlobalScheduler {
         self.add(process);
 
         let mut process_1 = Process::new().unwrap();
-        process_1.trap_frame.elr = run_1 as u64;
+        process_1.trap_frame.elr = run_blinky as u64;
         process_1.trap_frame.sp = process_1.stack.top().as_u64();
         self.add(process_1);
-
-        let mut process_2 = Process::new().unwrap();
-        process_2.trap_frame.elr = run_2 as u64;
-        process_2.trap_frame.sp = process_2.stack.top().as_u64();
-        self.add(process_2);
 
         Controller::new().enable(Interrupt::Timer1);
         tick_in(TICK);
@@ -140,40 +135,30 @@ impl Scheduler {
     /// energy as much as possible in the interim.
     fn switch(&mut self, new_state: State, tf: &mut TrapFrame) -> Option<Id> {
         let mut current = self.processes.pop_front()?;
+        let current_id = current.get_id();
         current.trap_frame = Box::new(*tf);
         current.state = new_state;
+        self.processes.push_back(current);
 
         loop {
-            if let Some(mut process) = self.processes.pop_front() {
-                if process.is_ready() {
-                    self.current = Some(process.get_id() as Id);
-                    *tf = *process.trap_frame;
-                    process.state = State::Running;
+            let mut process = self.processes.pop_front()?;
+            if process.is_ready() {
+                self.current = Some(process.get_id() as Id);
+                *tf = *process.trap_frame;
+                process.state = State::Running;
 
-                    // Push process back into queue.
-                    self.processes.push_front(process);
-                    self.processes.push_back(current);
-                    break;
-                }
-
-                self.processes.push_back(process);
+                // Push process back into queue.
+                self.processes.push_front(process);
+                break;
+            } else if process.get_id() == current_id {
+                // We cycled the list, wait for an interrupt.
+                aarch64::wfi();
             }
 
-            aarch64::wfi();
+            self.processes.push_back(process);
         }
 
         self.current
     }
 }
 
-extern fn run_shell() {
-    loop { shell::shell("user0> "); }
-}
-
-extern fn run_1() {
-    loop { shell::shell("user1> "); }
-}
-
-extern fn run_2() {
-    loop { shell::shell("user2> "); }
-}

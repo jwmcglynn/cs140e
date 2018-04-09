@@ -40,8 +40,7 @@ use pi::timer::spin_sleep_ms;
 use allocator::Allocator;
 use fs::FileSystem;
 use process::GlobalScheduler;
-
-use console::kprintln;
+use process::sys_sleep;
 
 #[cfg(not(test))]
 #[global_allocator]
@@ -76,4 +75,19 @@ pub extern "C" fn kmain() {
     ALLOCATOR.initialize();
     FILE_SYSTEM.initialize();
     SCHEDULER.start();
+}
+
+
+pub extern fn run_shell() {
+    loop { shell::shell("user0> "); }
+}
+
+pub extern fn run_blinky() {
+    let mut ready_led = Gpio::new(16).into_output();
+    loop {
+        ready_led.set();
+        sys_sleep(500);
+        ready_led.clear();
+        sys_sleep(500);
+    }
 }

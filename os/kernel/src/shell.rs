@@ -6,6 +6,7 @@ use std::path::{Path, PathBuf};
 use fat32::traits::{Dir, Entry, FileSystem, Timestamp, Metadata};
 
 use FILE_SYSTEM;
+use process::sys_sleep;
 
 #[cfg(not(test))]
 use ALLOCATOR;
@@ -59,6 +60,7 @@ impl<'a> Command<'a> {
             "cd" => handle_cd(&self.args[1..], working_dir),
             "ls" => handle_ls(&self.args[1..], working_dir),
             "cat" => handle_cat(&self.args[1..], working_dir),
+            "sleep" => handle_sleep(&self.args[1..]),
             path => kprintln!("Unknown command: {}", path)
         }
 
@@ -137,7 +139,6 @@ fn handle_cd(args: &[&str], working_dir: &mut PathBuf) {
         }
     }
 }
-
 
 fn print_entry<E: Entry>(entry: &E) {
     fn write_bool(b: bool, c: char) {
@@ -242,6 +243,28 @@ fn handle_cat(args: &[&str], working_dir: &PathBuf) {
         kprintln!("Not a file.");
     }
 }
+
+fn handle_sleep(args: &[&str]) {
+    if args.len() != 1 {
+        kprintln!("Usage:");
+        kprintln!("sleep <ms>");
+        kprintln!();
+        return;
+    }
+
+    use std::str::FromStr;
+
+    let result = u32::from_str(args[0]);
+    if result.is_err() {
+        kprintln!("Invalid argument.");
+        return;
+    }
+
+    let result = sys_sleep(result.unwrap());
+
+    kprintln!("End, {} ms", result);
+}
+
 
 const BELL: u8 = 7;
 const BACKSPACE: u8 = 8;

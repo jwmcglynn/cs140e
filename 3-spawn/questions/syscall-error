@@ -1,0 +1,5 @@
+Overloading x0 to handle both errors and return values has the advantage of using less registers for simple syscalls, and conform to how the C standard library (and oddly enough, Windows) tends to convey errors.  x0 is also the standard return value, so syscalls can have thin wrappers on the user-space side with that behavior.
+
+The downside is that for APIs that don't conform to the negative-value-is-error style, it requires extra mapping, and the return value for x0 is limited to only positive numbers.
+
+Rust has the advantage of having enums with data, which conveniently allows the Result and Err types to return both a real value or an error without having to bisect the possible successful return values.

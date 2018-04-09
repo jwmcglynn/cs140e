@@ -212,7 +212,7 @@ context_restore:
     msr TPIDR_EL0, x4
     add SP, SP, #32
 
-    // q0->q31, 18 instructions.
+    // q0->q31, 17 instructions.
     ldp q0, q1, [SP]
     ldp q2, q3, [SP, #32]
     ldp q4, q5, [SP, #64]

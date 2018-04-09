@@ -1,0 +1,1 @@
+Sleep returns a slightly different elapsed value because the syscall itself relies on the timer interrupt to work.  This only occurs at TICK intervals (10ms in my code), so the value may be off by up to 10ms.
