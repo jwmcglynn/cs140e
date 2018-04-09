@@ -6,6 +6,7 @@ use traps::TrapFrame;
 use shell;
 use pi::interrupt::{Interrupt, Controller};
 use pi::timer::tick_in;
+use aarch64;
 
 /// The `tick` time.
 // FIXME: When you're ready, change this to something more reasonable.
@@ -47,9 +48,19 @@ impl GlobalScheduler {
         process.trap_frame.sp = process.stack.top().as_u64();
         // Don't mask DAIF, set execution level to 0.
         process.trap_frame.spsr = 0x0;
-        let tf = &*process.trap_frame;
+        let tf = process.trap_frame.clone();
 
-        //self.add(process);
+        self.add(process);
+
+        let mut process_1 = Process::new().unwrap();
+        process_1.trap_frame.elr = run_1 as u64;
+        process_1.trap_frame.sp = process_1.stack.top().as_u64();
+        self.add(process_1);
+
+        let mut process_2 = Process::new().unwrap();
+        process_2.trap_frame.elr = run_2 as u64;
+        process_2.trap_frame.sp = process_2.stack.top().as_u64();
+        self.add(process_2);
 
         Controller::new().enable(Interrupt::Timer1);
         tick_in(TICK);
@@ -103,7 +114,20 @@ impl Scheduler {
     /// It is the caller's responsibility to ensure that the first time `switch`
     /// is called, that process is executing on the CPU.
     fn add(&mut self, mut process: Process) -> Option<Id> {
-        unimplemented!("Scheduler::add()")
+        let id = match self.last_id {
+            Some(last_id) => last_id.checked_add(1)?,
+            None => 0
+        };
+
+        process.trap_frame.tpidr = id;
+        self.processes.push_back(process);
+
+        if let None = self.current {
+            self.current = Some(id);
+        }
+
+        self.last_id = Some(id);
+        self.last_id
     }
 
     /// Sets the current process's state to `new_state`, finds the next process
@@ -115,14 +139,41 @@ impl Scheduler {
     /// This method blocks until there is a process to switch to, conserving
     /// energy as much as possible in the interim.
     fn switch(&mut self, new_state: State, tf: &mut TrapFrame) -> Option<Id> {
-        unimplemented!("Scheduler::switch()")
+        let mut current = self.processes.pop_front()?;
+        current.trap_frame = Box::new(*tf);
+        current.state = new_state;
+
+        loop {
+            if let Some(mut process) = self.processes.pop_front() {
+                if process.is_ready() {
+                    self.current = Some(process.get_id() as Id);
+                    *tf = *process.trap_frame;
+                    process.state = State::Running;
+
+                    // Push process back into queue.
+                    self.processes.push_front(process);
+                    self.processes.push_back(current);
+                    break;
+                }
+
+                self.processes.push_back(process);
+            }
+
+            aarch64::wfi();
+        }
+
+        self.current
     }
 }
 
 extern fn run_shell() {
-    unsafe { asm!("brk 1" :::: "volatile"); }
-    unsafe { asm!("brk 2" :::: "volatile"); }
-    shell::shell("user0> ");
-    unsafe { asm!("brk 3" :::: "volatile"); }
+    loop { shell::shell("user0> "); }
+}
+
+extern fn run_1() {
     loop { shell::shell("user1> "); }
+}
+
+extern fn run_2() {
+    loop { shell::shell("user2> "); }
 }

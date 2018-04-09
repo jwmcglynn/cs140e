@@ -1,0 +1,3 @@
+Most of the exception vectors are internal to the system, based on things that the instructions have done.  If all of the processes are waiting, then they have to be waiting on something external to the system, which would be either a FIQ or IRQ.
+
+If no interrupt arrives, then the processes would never be unblocked, so waiting is the correct behavior.

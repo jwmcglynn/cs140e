@@ -1,0 +1,3 @@
+The scheduler doesn't know the new state because it doesn't know why the exception handler was called.  It could be a timed interrupt, in which case the process is still ready to execute the next time it is possible.
+
+If the process did a syscall, then the process may not be ready until something else happens (like I/O), but the scheduler has no way to know that.
